@@ -1,0 +1,15 @@
+BZR merge-modified list format 1
+file_id: session_test.go-20110512060724-w384lf118aq155cd-3
+hash: 977892c400e0681efae6892d9b35e2af6f4b174d
+
+file_id: session.go-20101227173740-ixenc23565jpnbxw-10
+hash: 811e38474465232bffb06e56d5997c0d49ea82e4
+
+file_id: gobson.go-20120121202541-k0gsuf6mago5b16v-4
+hash: 1141b327040e1d7ced52c089251b8c8fa190f9f3
+
+file_id: gridfs.go-20110425041832-qceo4dppvtxoxjvd-1
+hash: b309fe4b9efccdfed5fa62151b1a728f5c37968d
+
+file_id: auth_test.go-20110512060724-w384lf118aq155cd-1
+hash: 2d544c3e3a695918517fd04202d94200414c2ab8
