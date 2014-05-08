@@ -4,33 +4,57 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/eraclitux/morest/external/mgo"
-	"github.com/eraclitux/morest/external/mgo/bson"
 	"log"
 	"net/http"
-	"strings"
 	"strconv"
+	"strings"
 )
 
 const DEBUG = true
 
-//model the action requested from client to perform on mongodb
+//Model the action requested from client to perform on mongodb
 type mongoRequest struct {
 	Database   string
 	Collection string
 	Action     string
-	Args       string
+	Args       map[string]interface{}
 	SubAction  string
-	SubArgs	   string
-	Limit	   int
+	SubArgs    string
+	Limit      int
+}
+
+//Check if decoded action is sopported and coherent
+func (s *mongoRequest) Check(r *http.Request) error {
+	supportedActions := []string{"find", "insert"}
+	isSupported := false
+	for _, v := range supportedActions {
+		if s.Action == v {
+			isSupported = true
+		}
+	}
+	if !isSupported {
+		return fmt.Errorf("%s action is invalid or not supported", s.Action)
+	}
+	switch r.Method {
+	case "POST":
+		if s.Action == "find" {
+			return fmt.Errorf("Action requested not coherent with http method")
+		}
+	}
+	return nil
+}
+
+//Help decode mongodb desired function (find, insert etc) and its arguments
+func getActionArgs(s string) (action, args string) {
+	actiond := strings.Split(s, "(")
+	action = actiond[0]
+	args = strings.Trim(actiond[1], ")")
+	return
 }
 
 func (s *mongoRequest) Decode(r *http.Request) error {
-	r.ParseForm() //debug
 	mongoQuery := strings.Split(r.RequestURI, "/")[1]
 	for i, v := range strings.Split(mongoQuery, ".") {
-		if DEBUG {
-			fmt.Println(i, v)
-		}
 		switch i {
 		case 0:
 			s.Database = v
@@ -38,29 +62,39 @@ func (s *mongoRequest) Decode(r *http.Request) error {
 			s.Collection = v
 		case 2:
 			//mongodb function to permform on data (find, insert etc)
-			//TODO a function!
-			action := strings.Split(v, "(")
-			s.Action = action[0]
-			s.Args = strings.Trim(action[1], ")")
+			var argsString string
+			s.Action, argsString = getActionArgs(v)
+			//At this point you should already miss python very much
+			err := json.Unmarshal([]byte(argsString), &s.Args)
+			//s.Args = s.Args.(map[string]interface{})
+			if err != nil {
+				return err
+			}
+			fmt.Println(s.Args)
 		case 3:
 			//sub action (es sort, limit)
-			action := strings.Split(v, "(")
-			s.SubAction = action[0]
-			s.SubArgs = strings.Trim(action[1], ")")
+			s.SubAction, s.SubArgs = getActionArgs(v)
 		case 4:
 			action := strings.Split(v, "(")
 			s.Limit, _ = strconv.Atoi(strings.Trim(action[1], ")"))
 		}
 	}
-	return nil
+	if DEBUG {
+		fmt.Printf("%+v\n", s)
+	}
+	return s.Check(r)
 }
 
+//Perform decoded action on mongodb
 func (s *mongoRequest) Execute(msession *mgo.Session) ([]byte, error) {
 	session := msession.Copy()
 	defer session.Close()
 	coll := session.DB(s.Database).C(s.Collection)
 	gdata := new([]interface{})
-	coll.Find(bson.M{"my-key": "my_value"}).Limit(6).All(gdata)
+	err := coll.Find(s.Args).Limit(6).All(gdata)
+	if err != nil {
+		return nil, err
+	}
 	jdata, err := json.Marshal(gdata)
 	if err != nil {
 		return nil, err

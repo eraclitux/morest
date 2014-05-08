@@ -5,12 +5,12 @@ Copyright (c) 2014 Andrea Masi
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/eraclitux/morest/external/mgo"
 	"github.com/eraclitux/morest/mongo"
 	"log"
 	"net/http"
-	"flag"
 )
 
 var mongoAddressFlag = flag.String("a", "localhost", "Mongodb address. Can be a list of server in cluster like xxx")
