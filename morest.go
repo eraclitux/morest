@@ -23,6 +23,6 @@ func main() {
 		log.Panic("Unable to connect to Mongodb ", err)
 	}
 	defer msession.Close()
-	http.HandleFunc("/", mongo.MainHandler(msession))
+	http.HandleFunc("/", mongo.MakeMainHandler(msession))
 	http.ListenAndServe(fmt.Sprintf(":%d", *portFlag), nil)
 }
