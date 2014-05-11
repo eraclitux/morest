@@ -95,16 +95,33 @@ func (s *mongoRequest) Decode(r *http.Request) error {
 
 //Decode json sort argumets to be passed to mgo' Sort()
 func decodeSortArgs(s string) []string {
-	//FIXME decode json 
-	s = strings.Replace(s, "\"", "",-1)
-	s = strings.Replace(s, " ", "",-1)
-	return strings.Split(s, ",")
+	returnValue := []string{}
+	glob := new(map[string]interface{})
+	if len(s) != 0 {
+		err := json.Unmarshal([]byte(s), glob)
+		if err != nil {
+			return []string{""}
+		}
+		for k, v := range(*glob) {
+			i := v.(float64)
+			if int(i) < 0 {
+				k := "-"+k
+				returnValue = append(returnValue, k)
+			} else {
+				returnValue = append(returnValue, k)
+			}
+		}
+	}
+	fmt.Println(returnValue)
+	return returnValue
 }
-//Prepares the query to exucute primary action
+//Setup the query to exucute primary action
 func bakeAction(queryP **mgo.Query, s *mongoRequest, coll *mgo.Collection) error {
 	switch s.Action {
 	case "find":
 		*queryP = coll.Find(s.Args)
+		return nil
+	case "count":
 		return nil
 	case "insert":
 		return nil
@@ -114,6 +131,11 @@ func bakeAction(queryP **mgo.Query, s *mongoRequest, coll *mgo.Collection) error
 }
 //Prepares the query to exucute secondary actions
 func bakeSubActions(queryP **mgo.Query, s *mongoRequest, coll *mgo.Collection) error {
+	//TODO parse SubAction2
+	//TODO add sort as subaction
+	if s.Action == "count" || s.Action == "insert" {
+		return nil
+	}
 	if s.SubAction1 != "" {
 		switch s.SubAction1 {
 		case "sort":
@@ -144,13 +166,17 @@ func executeQuery(query *mgo.Query, s *mongoRequest, coll *mgo.Collection) ([]by
 		return json.Marshal(gdata)
 	case "insert":
 		return []byte{}, coll.Insert(s.Args)
+	case "count":
+		n, err := coll.Count()
+		number := strconv.Itoa(n)
+		return []byte(number), err
 	default:
 		return []byte{}, fmt.Errorf("Unable to execute %s", s.Action)
 	}
 }
 //Perform decoded action on mongodb
 func (s *mongoRequest) Execute(msession *mgo.Session) ([]byte, error) {
-	//TODO add session to mongoRequest struct?
+	//FIXME add session to mongoRequest struct?
 	session := msession.Copy()
 	defer session.Close()
 	coll := session.DB(s.Database).C(s.Collection)
@@ -167,7 +193,6 @@ func (s *mongoRequest) Execute(msession *mgo.Session) ([]byte, error) {
 func MakeMainHandler(msession *mgo.Session) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if DEBUG {
-			log.Printf("[DEBUG] Request.URL struct: %+v\n", r.URL)
 			log.Printf("[DEBUG] Request struct: %+v\n", r)
 		}
 		mReq := mongoRequest{}
@@ -186,6 +211,6 @@ func MakeMainHandler(msession *mgo.Session) http.HandlerFunc {
 }
 
 func init() {
-	supportedActions = []string{"find", "insert"}
+	supportedActions = []string{"find", "insert", "count"}
 	//supportedSubActions := []string{"sort", "limit"}
 }

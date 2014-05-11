@@ -85,6 +85,7 @@ func buildCases() []*testCase {
 }
 func compareMapInterfaces(o, p *map[string]interface{}) bool {
 	// TODO add more types
+	//TODO why poiters to map? Dont bother with pointers here...
 	//No, really, where is my Python?
 	if len(*o) != len(*p) {
 		return false
@@ -92,17 +93,17 @@ func compareMapInterfaces(o, p *map[string]interface{}) bool {
 	for k, v := range *o {
 		switch vv := v.(type) {
 		case string:
-			fmt.Println(k, "is string", vv)
+			//fmt.Println(k, "is string", vv)
 			if vv != (*p)[k].(string) {
 				return false
 			}
 		case float64:
-			fmt.Println(k, "is float64", vv)
+			//fmt.Println(k, "is float64", vv)
 			if vv != (*p)[k].(float64) {
 				return false
 			}
 		case []interface{}:
-			fmt.Println(k, "is an array:")
+			//fmt.Println(k, "is an array:")
 			for i, u := range vv {
 				fmt.Println(i, u)
 			}
@@ -115,14 +116,10 @@ func compareMapInterfaces(o, p *map[string]interface{}) bool {
 }
 func TestDecode(t *testing.T) {
 	for i, singleCase := range buildCases() {
-		fmt.Println("===============")
-		fmt.Println("Checking case", i+1)
-		fmt.Println(singleCase.Req.RequestURI)
 		testStruct := mongoRequest{}
 		err := testStruct.Decode(singleCase.Req)
 		if singleCase.Err != nil && err != nil {
-			fmt.Println("[TEST][OK] got the expected error")
-			fmt.Println(err)
+			continue
 		} else if err != nil {
 			fmt.Println("[FAIL] unexpected error")
 			fmt.Println(err)
@@ -135,9 +132,41 @@ func TestDecode(t *testing.T) {
 			testStruct.SubAction2 == singleCase.expectedResult.SubAction2 &&
 			testStruct.SubArgs2 == singleCase.expectedResult.SubArgs2 &&
 			compareMapInterfaces(&testStruct.Args, &singleCase.expectedResult.Args)) {
+			fmt.Println("===============")
+			fmt.Println("Checking case", i+1)
+			fmt.Println(singleCase.Req.RequestURI)
 			fmt.Printf("[FAIL] %s\n", singleCase.Req.RequestURI)
 			fmt.Printf("Expected: %+v\n", *singleCase.expectedResult)
 			fmt.Printf("Got: %+v\n", testStruct)
+			t.Fail()
+		}
+	}
+}
+
+type decodeSortCase struct {
+	Case string
+	Expected []string
+}
+func compareSortSlices(o, p []string) bool {
+	if len(o) != len(p) {
+		return false
+	}
+	for i, v := range(o) {
+		if v != p[i] {
+			return false
+		}
+	}
+	return true
+}
+func TestDecodeSortArgs(t *testing.T) {
+	cases := []decodeSortCase{}
+	oneCase := decodeSortCase{"{\"name\":-1,\"age\":1}", []string{"-name", "age"}}
+	cases = append(cases, oneCase)
+	for _, singleCase := range(cases) {
+		got := decodeSortArgs(singleCase.Case)
+		if !compareSortSlices(got, singleCase.Expected) {
+			fmt.Printf("expected: %+v\n", singleCase)
+			fmt.Printf("got: %+v\n", got)
 			t.Fail()
 		}
 	}
