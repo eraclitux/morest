@@ -8,7 +8,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/eraclitux/morest/external/mgo"
-	"github.com/eraclitux/morest/mongo"
+	"github.com/eraclitux/morest/morest"
 	"log"
 	"net/http"
 )

@@ -1,4 +1,4 @@
-package mongo
+package morest
 
 import (
 	"encoding/json"
