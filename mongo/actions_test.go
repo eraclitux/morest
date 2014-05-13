@@ -44,7 +44,10 @@ func buildCases() []*testCase {
 	case4Glob := make(map[string]interface{})
 	case4Glob["name"] = "pippo"
 	case4Glob["number"] = float64(42)
-	case4.expectedResult = &mongoRequest{"database", "collection", "find", case4Glob, "sort", "", "limit", "5"}
+	case4.expectedResult = &mongoRequest{
+		Database:"database", Collection:"collection", Action:"find", Args1:case4Glob,
+		SubAction1:"sort", SubArgs1:"", SubAction2:"limit", SubArgs2:"5",
+	}
 	cases = append(cases, &case4)
 	case5 := testCase{}
 	case5.Req = &http.Request{
@@ -59,7 +62,10 @@ func buildCases() []*testCase {
 		RequestURI: "/database.collection.find().sort().limit(5)",
 	}
 	case6Glob := make(map[string]interface{})
-	case6.expectedResult = &mongoRequest{"database", "collection", "find", case6Glob, "sort", "", "limit", "5"}
+	case6.expectedResult = &mongoRequest{
+		Database:"database", Collection:"collection", Action:"find", Args1:case6Glob,
+		SubAction1:"sort", SubArgs1:"", SubAction2:"limit", SubArgs2:"5",
+	}
 	cases = append(cases, &case6)
 	case7 := testCase{}
 	case7.Req = &http.Request{
@@ -67,7 +73,10 @@ func buildCases() []*testCase {
 		RequestURI: "/database.collection.find().limit(5).sort(\"name\", \"surname\")",
 	}
 	case7Glob := make(map[string]interface{})
-	case7.expectedResult = &mongoRequest{"database", "collection", "find", case7Glob, "limit", "5", "sort", "\"name\", \"surname\""}
+	case7.expectedResult = &mongoRequest{
+		Database:"database", Collection:"collection", Action:"find", Args1:case7Glob,
+		SubAction1:"limit", SubArgs1:"5", SubAction2:"sort", SubArgs2:"\"name\", \"surname\"",
+	}
 	cases = append(cases, &case7)
 
 	case8 := testCase{}
@@ -78,13 +87,24 @@ func buildCases() []*testCase {
 	case8Glob := make(map[string]interface{})
 	case8Glob["name"] = "mario"
 	case8Glob["num"] = float64(42)
-	case8.expectedResult = &mongoRequest{"database", "collection", "insert", case8Glob, "", "", "", ""}
-	cases = append(cases, &case8)
+	case8.expectedResult = &mongoRequest{Database:"database", Collection:"collection", Action:"insert", Args1:case8Glob}
+	case9 := testCase{}
+	case9.Req = &http.Request{
+		Method:     "DELETE",
+		RequestURI: "/database.collection.remove({\"name\":\"mario\",\"num\":42},{\"param\":1})",
+	}
+	case9Glob := make(map[string]interface{})
+	case9Glob["name"] = "mario"
+	case9Glob["num"] = float64(42)
+	case9.expectedResult = &mongoRequest{
+		Database:"database", Collection:"collection", Action:"remove", Args1:case8Glob,
+	}
+	cases = append(cases, &case9)
 	return cases
 
 }
 func compareMapInterfaces(o, p *map[string]interface{}) bool {
-	// TODO add more types
+	//TODO add more types
 	//TODO why poiters to map? Dont bother with pointers here...
 	//No, really, where is my Python?
 	if len(*o) != len(*p) {
@@ -122,6 +142,7 @@ func TestDecode(t *testing.T) {
 			continue
 		} else if err != nil {
 			fmt.Println("[FAIL] unexpected error")
+			fmt.Println(singleCase.Req.RequestURI)
 			fmt.Println(err)
 			t.Fail()
 		} else if !(testStruct.Database == singleCase.expectedResult.Database &&
@@ -131,7 +152,7 @@ func TestDecode(t *testing.T) {
 			testStruct.SubArgs1 == singleCase.expectedResult.SubArgs1 &&
 			testStruct.SubAction2 == singleCase.expectedResult.SubAction2 &&
 			testStruct.SubArgs2 == singleCase.expectedResult.SubArgs2 &&
-			compareMapInterfaces(&testStruct.Args, &singleCase.expectedResult.Args)) {
+			compareMapInterfaces(&testStruct.Args1, &singleCase.expectedResult.Args1)) {
 			fmt.Println("===============")
 			fmt.Println("Checking case", i+1)
 			fmt.Println(singleCase.Req.RequestURI)
@@ -144,14 +165,15 @@ func TestDecode(t *testing.T) {
 }
 
 type decodeSortCase struct {
-	Case string
+	Case     string
 	Expected []string
 }
+
 func compareSortSlices(o, p []string) bool {
 	if len(o) != len(p) {
 		return false
 	}
-	for i, v := range(o) {
+	for i, v := range o {
 		if v != p[i] {
 			return false
 		}
@@ -162,7 +184,7 @@ func TestDecodeSortArgs(t *testing.T) {
 	cases := []decodeSortCase{}
 	oneCase := decodeSortCase{"{\"name\":-1,\"age\":1}", []string{"-name", "age"}}
 	cases = append(cases, oneCase)
-	for _, singleCase := range(cases) {
+	for _, singleCase := range cases {
 		got := decodeSortArgs(singleCase.Case)
 		if !compareSortSlices(got, singleCase.Expected) {
 			fmt.Printf("expected: %+v\n", singleCase)
