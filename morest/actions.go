@@ -59,7 +59,7 @@ func (s *mongoRequest) Check(r *http.Request) error {
 		}
 	}
 	if !isSupported {
-		return fmt.Errorf("%s action is invalid or not supported", s.SubAction1)
+		return fmt.Errorf("%s action is invalid or not supported", s.SubAction2)
 	}
 	switch r.Method {
 	case "POST":
@@ -70,12 +70,22 @@ func (s *mongoRequest) Check(r *http.Request) error {
 	return nil
 }
 
-//Help decode mongodb functions (find, insert etc) and its arguments
+//Help decode mongodb functions and arguments
+//This is used for find, insert, update
 func getActionArgs(s string) (action string, args1, args2, args3 map[string]interface{}, er error) {
-	//use SplitAfter
-	if len(argsString) != 0 {
-		//At this point you should already miss python very much
-		err := json.Unmarshal([]byte(argsString), &args1)
+	argsPointerSlice := []*map[string]interface{}{&args1, &args2, &args3}
+	actiond := strings.Split(s, "(")
+	action = actiond[0]
+	args := strings.Trim(actiond[1], ")")
+	if len(args) == 0 {
+		return
+	}
+	argsSlice := strings.SplitAfter(args, "},")
+	for i, v := range argsSlice {
+		v = strings.TrimRight(v, ",")
+		//Here we dont need to args1.assert(map[string]interface{})
+		//becuse we dont pass interface{} to Unmarshal but the right type
+		err := json.Unmarshal([]byte(v), argsPointerSlice[i])
 		if err != nil {
 			er = err
 			return
@@ -84,7 +94,8 @@ func getActionArgs(s string) (action string, args1, args2, args3 map[string]inte
 	return
 }
 
-//Help decode mongodb functions (sort, limit etc) and its arguments
+//Help decode mongodb functions and its arguments
+//This is used for sort, limit 
 func getSubActionArgs(s string) (action, args string) {
 	actiond := strings.Split(s, "(")
 	action = actiond[0]
@@ -110,6 +121,9 @@ func (s *mongoRequest) Decode(r *http.Request) error {
 		case 2:
 			var err error
 			s.Action, s.Args1, s.Args2, s.Args3, err = getActionArgs(v)
+			if err != nil {
+				return err
+			}
 		//sub action (es sort, limit)
 		case 3:
 			s.SubAction1, s.SubArgs1 = getSubActionArgs(v)
@@ -166,7 +180,6 @@ func bakeAction(queryP **mgo.Query, s *mongoRequest, coll *mgo.Collection) error
 //Prepares the query to exucute secondary actions
 func bakeSubActions(queryP **mgo.Query, s *mongoRequest, coll *mgo.Collection) error {
 	//TODO parse SubAction2
-	//TODO add sort as subaction
 	if s.Action == "count" || s.Action == "insert" {
 		return nil
 	}
@@ -189,6 +202,7 @@ func bakeSubActions(queryP **mgo.Query, s *mongoRequest, coll *mgo.Collection) e
 	}
 	return nil
 }
+//Exectute query on mongodb
 func executeQuery(query *mgo.Query, s *mongoRequest, coll *mgo.Collection) ([]byte, error) {
 	gdata := new([]interface{})
 	switch s.Action {
@@ -202,14 +216,17 @@ func executeQuery(query *mgo.Query, s *mongoRequest, coll *mgo.Collection) ([]by
 		return []byte{}, coll.Insert(s.Args1)
 	case "count":
 		n, err := coll.Count()
+		if err != nil {
+			return []byte{}, err
+		}
 		number := strconv.Itoa(n)
-		return []byte(number), err
+		return []byte(number), nil
 	default:
 		return []byte{}, fmt.Errorf("Unable to execute %s", s.Action)
 	}
 }
 
-//Perform decoded action on mongodb
+//Performs decoded action on mongodb
 func (s *mongoRequest) Execute(msession *mgo.Session) ([]byte, error) {
 	//FIXME add session to mongoRequest struct?
 	session := msession.Copy()
@@ -241,12 +258,12 @@ func MakeMainHandler(msession *mgo.Session) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		fmt.Fprintf(w, "Data: %v\n", string(jdata))
+		fmt.Fprintf(w, "%s\n", string(jdata))
 	}
 }
 
 func init() {
 	//To check against user requests
-	supportedActions = []string{"find", "insert", "count", "delete"}
+	supportedActions = []string{"find", "insert", "update", "remove", "count"}
 	supportedSubActions = []string{"sort", "limit", ""}
 }

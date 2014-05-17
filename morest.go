@@ -17,12 +17,18 @@ var mongoAddressFlag = flag.String("a", "localhost", "Mongodb address. Can be a 
 var portFlag = flag.Int("p", 9002, "Port to listen for requests")
 
 func main() {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Fatalf("An error occurred: %s", r)
+		}
+	}()
 	flag.Parse()
 	msession, err := mgo.Dial(*mongoAddressFlag)
 	if err != nil {
-		log.Panic("Unable to connect to Mongodb ", err)
+		//Deferred function are not run becuse os.Exit(1) is called in the end
+		log.Fatalf("Unable to connect to Mongodb: %s", err)
 	}
 	defer msession.Close()
-	http.HandleFunc("/", mongo.MakeMainHandler(msession))
+	http.HandleFunc("/", morest.MakeMainHandler(msession))
 	http.ListenAndServe(fmt.Sprintf(":%d", *portFlag), nil)
 }

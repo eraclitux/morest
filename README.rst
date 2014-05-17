@@ -1,6 +1,6 @@
 MoREST
 ======
-Sometimes adding mongo driver code to our application can be overkill. Maybe we are dealing with an embedded device, maybe we are coding an app (html5, native), maybe platform we are using doesnt have yet a mongodb driver, or we are making a simplescript, or maybe we are just lazy. In all these cases (and even in others) you can try MoREST, the ingenuos mongodb proxy.
+Sometimes adding mongo driver code to our application can be overkill. Maybe we are dealing with an embedded device, maybe we are coding an app (html5, native), maybe platform we are using doesn't have yet a mongodb driver, or we are making a simple script, or maybe we are just lazy. In all these cases (and even in others) you can try MoREST, the ingenuos mongodb proxy.
 
 It sits in front your mongodb server (or replica set!) and exposes, via a RESTful-like interface, a **subset** of mongodb commands. Being based on the amazing `mgo <http://labix.org/mgo>`_, you can configure it to act in three consistency modes in case you are using replication:
 - **Strong** consistency uses a unique connection with the master so that all reads and writes are as up-to-date as possible and consistent with each other.
@@ -8,6 +8,10 @@ It sits in front your mongodb server (or replica set!) and exposes, via a RESTfu
 - **Eventual** consistency offers the best resource usage, distributing reads across multiple slaves and writes across multiple connections to the master, but consistency isn't guaranteed.
 
 MoREST *mimics* mongodb syntax so you dont have to learn some other rules. 
+
+Note on RESTful
+---------------
+Before you complain about the RESTful term used above, MoREST doesn't really apply the RESTful paradigm, it just follows some of its paths. Maybe the results is not elegant and many will frown, sorry.
 
 Supported actions
 =================
