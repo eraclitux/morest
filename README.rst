@@ -35,6 +35,10 @@ Find documents with a given pattern::
 
         $ curl -g -X GET "localhost:9002/my-db.my-coll.find({\"name\":\"pippo\"}).limit(5)"
 
+Delete a single document::
+
+        $ curl -g -X GET "localhost:9002/my-db.my-coll.remove({\"name\":\"pippo\"})"
+
 Find documents, sort them and limit results::
 
         $ curl -g -X GET "localhost:9002/my-db.my-coll.find({\"number\":\42\"}).sort({\"name\":-1}).limit(5)"
@@ -42,3 +46,7 @@ Note
 ~~~~
 - Do not use any whitespace in query passed with url.
 - You have to escape double quotes.
+
+Important notice
+================
+This code is not even alfa quality. It is a work in progress and should not be used in production environments.
