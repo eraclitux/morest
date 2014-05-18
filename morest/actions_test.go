@@ -142,6 +142,10 @@ func buildTestCases() []*testCase {
 	case9.expectedResult = &mongoRequest{
 		Database:"testing-db", Collection:"testing-collection", Action:"remove", Args1:case9Glob,
 	}
+	case9.ExpectedJson = append(
+		case9.ExpectedJson,
+		map[string]interface{}{"nRemoved":float64(1)},
+	)
 	cases = append(cases, &case9)
 
 	case10 := testCase{}
