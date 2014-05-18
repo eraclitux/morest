@@ -180,7 +180,6 @@ func bakeAction(queryP **mgo.Query, s *mongoRequest, coll *mgo.Collection) error
 
 //Prepares the query to exucute secondary actions
 func bakeSubActions(queryP **mgo.Query, s *mongoRequest, coll *mgo.Collection) error {
-	//TODO parse SubAction2
 	//No subactions on these
 	if s.Action == "count" ||
 	   s.Action == "insert" ||
