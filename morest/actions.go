@@ -22,10 +22,12 @@ type mongoRequest struct {
 	Database   string
 	Collection string
 	//mydb.mycoll.action(args1, args2, args3)
+	//REF convert into slices
 	Action     string
 	Args1       map[string]interface{}
 	Args2       map[string]interface{}
 	Args3       map[string]interface{}
+	//REF convert into slices
 	SubAction1 string
 	SubArgs1   string
 	SubAction2 string
@@ -158,7 +160,6 @@ func decodeSortArgs(s string) []string {
 			}
 		}
 	}
-	fmt.Println(returnValue)
 	return returnValue
 }
 
@@ -180,16 +181,34 @@ func bakeAction(queryP **mgo.Query, s *mongoRequest, coll *mgo.Collection) error
 //Prepares the query to exucute secondary actions
 func bakeSubActions(queryP **mgo.Query, s *mongoRequest, coll *mgo.Collection) error {
 	//TODO parse SubAction2
-	if s.Action == "count" || s.Action == "insert" {
+	//No subactions on these
+	if s.Action == "count" ||
+	   s.Action == "insert" ||
+	   s.Action == "remove" {
 		return nil
 	}
 	if s.SubAction1 != "" {
 		switch s.SubAction1 {
 		case "sort":
 			*queryP = queryP.Sort(decodeSortArgs(s.SubArgs1)...)
-			return nil
 		case "limit":
 			num, err := strconv.Atoi(s.SubArgs1)
+			if err != nil {
+				return fmt.Errorf("Unable to convert limit argument")
+			} else {
+				*queryP = queryP.Limit(num)
+			}
+		default:
+			return fmt.Errorf("Unable to execute %s", s.SubAction1)
+		}
+	}
+	if s.SubAction2 != "" {
+		switch s.SubAction2 {
+		case "sort":
+			*queryP = queryP.Sort(decodeSortArgs(s.SubArgs2)...)
+			return nil
+		case "limit":
+			num, err := strconv.Atoi(s.SubArgs2)
 			if err != nil {
 				return fmt.Errorf("Unable to convert limit argument")
 			} else {
@@ -213,7 +232,18 @@ func executeQuery(query *mgo.Query, s *mongoRequest, coll *mgo.Collection) ([]by
 		}
 		return json.Marshal(gdata)
 	case "insert":
-		return []byte{}, coll.Insert(s.Args1)
+		err := coll.Insert(s.Args1)
+		if err != nil {
+			return []byte{}, err
+		}
+		return []byte("{\"nInserted\":1}"), nil
+	case "remove":
+		//This removes a single document
+		err := coll.Remove(s.Args1)
+		if err != nil {
+			return []byte{}, err
+		}
+		return []byte("{\"nRemoved\":1}"), nil
 	case "count":
 		n, err := coll.Count()
 		if err != nil {
@@ -264,6 +294,6 @@ func MakeMainHandler(msession *mgo.Session) http.HandlerFunc {
 
 func init() {
 	//To check against user requests
-	supportedActions = []string{"find", "insert", "update", "remove", "count"}
+	supportedActions = []string{"find", "insert", "remove", "count"}
 	supportedSubActions = []string{"sort", "limit", ""}
 }
