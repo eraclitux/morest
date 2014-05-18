@@ -21,146 +21,149 @@ type testCase struct {
 	ExpectedJson []map[string]interface{}
 }
 
-var testCases []*testCase
+var testCases []testCase
 
-func buildTestCases() []*testCase {
-	cases := []*testCase{}
-	case1 := testCase{}
-	case1.Req = &http.Request{
+func buildTestCases() []testCase {
+	cases := []testCase{}
+	singleCase := testCase{}
+	caseArgs1 := make(map[string]interface{})
+	//================================================
+	singleCase.Req = &http.Request{
 		Method:     "GET",
 		RequestURI: "/testing-db.testing-collection.find({name:pippo}).sort().limit(5)",
 	}
-	case1.Err = fmt.Errorf("Error for invalid json formatting")
-	cases = append(cases, &case1)
-
-	case2 := testCase{}
-	case2.Req = &http.Request{
+	singleCase.Err = fmt.Errorf("Error for invalid json formatting")
+	cases = append(cases, singleCase)
+	//================================================
+	singleCase = testCase{}
+	singleCase.Req = &http.Request{
 		Method:     "POST",
 		RequestURI: "/testing-db.testing-collection.find({\"name\":\"pippo\"}).sort().limit(5)",
 	}
-	case2.Err = fmt.Errorf("We expect an error")
-	cases = append(cases, &case2)
-
-	case3 := testCase{}
-	case3.Req = &http.Request{
+	singleCase.Err = fmt.Errorf("We expect an error")
+	cases = append(cases, singleCase)
+	//================================================
+	singleCase = testCase{}
+	singleCase.Req = &http.Request{
 		Method:     "GET",
 		RequestURI: "/testing-db.testing-collection.fund({\"name\":\"pippo\"}).sort().limit(5)",
 	}
-	case3.Err = fmt.Errorf("We expect an error")
-	cases = append(cases, &case3)
-
-	case4 := testCase{}
-	case4.Req = &http.Request{
+	singleCase.Err = fmt.Errorf("We expect an error")
+	cases = append(cases, singleCase)
+	//================================================
+	singleCase = testCase{}
+	singleCase.Req = &http.Request{
 		Method:     "GET",
 		RequestURI: "/testing-db.testing-collection.find({\"num\":{\"$gt\":4}}).sort().limit(2)",
 	}
-	case4Glob := make(map[string]interface{})
-	case4Glob["num"] = map[string]interface{}{"$gt":float64(4)}
-	case4.expectedResult = &mongoRequest{
-		Database:"testing-db", Collection:"testing-collection", Action:"find", Args1:case4Glob,
+	caseArgs1 = make(map[string]interface{})
+	caseArgs1["num"] = map[string]interface{}{"$gt":float64(4)}
+	singleCase.expectedResult = &mongoRequest{
+		Database:"testing-db", Collection:"testing-collection", Action:"find", Args1:caseArgs1,
 		SubAction1:"sort", SubArgs1:"", SubAction2:"limit", SubArgs2:"2",
 	}
-	case4.ExpectedJson = append(
-		case4.ExpectedJson,
+	singleCase.ExpectedJson = append(
+		singleCase.ExpectedJson,
 		//Convert to float64 because so does Unmarshal()
 		map[string]interface{}{"name":"Pippo-5", "num":float64(5)},
 	)
-	case4.ExpectedJson = append(
-		case4.ExpectedJson,
+	singleCase.ExpectedJson = append(
+		singleCase.ExpectedJson,
 		map[string]interface{}{"name":"Pippo-6", "num":float64(6)},
 	)
-	cases = append(cases, &case4)
-
-	case5 := testCase{}
-	case5.Req = &http.Request{
+	cases = append(cases, singleCase)
+	//================================================
+	singleCase = testCase{}
+	singleCase.Req = &http.Request{
 		Method:     "GET",
 		RequestURI: "/testing-db.testing-collection",
 	}
-	case5.Err = fmt.Errorf("We expect an error")
-	cases = append(cases, &case5)
-
-	case6 := testCase{}
-	case6.Req = &http.Request{
+	singleCase.Err = fmt.Errorf("We expect an error")
+	cases = append(cases, singleCase)
+	//================================================
+	singleCase = testCase{}
+	singleCase.Req = &http.Request{
 		Method:     "GET",
 		RequestURI: "/testing-db.testing-collection.find().sort().limit(2)",
 	}
-	case6Glob := make(map[string]interface{})
-	case6.expectedResult = &mongoRequest{
-		Database:"testing-db", Collection:"testing-collection", Action:"find", Args1:case6Glob,
+	caseArgs1 = make(map[string]interface{})
+	singleCase.expectedResult = &mongoRequest{
+		Database:"testing-db", Collection:"testing-collection", Action:"find", Args1:caseArgs1,
 		SubAction1:"sort", SubArgs1:"", SubAction2:"limit", SubArgs2:"2",
 	}
-	case6.ExpectedJson = append(
-		case6.ExpectedJson,
+	singleCase.ExpectedJson = append(
+		singleCase.ExpectedJson,
 		map[string]interface{}{"name":"Pippo-0", "num":float64(0)},
 	)
-	case6.ExpectedJson = append(
-		case6.ExpectedJson,
+	singleCase.ExpectedJson = append(
+		singleCase.ExpectedJson,
 		map[string]interface{}{"name":"Pippo-1", "num":float64(1)},
 	)
-	cases = append(cases, &case6)
-	case7 := testCase{}
-	case7.Req = &http.Request{
+	cases = append(cases, singleCase)
+	//================================================
+	singleCase = testCase{}
+	singleCase.Req = &http.Request{
 		Method:     "GET",
 		RequestURI: "/testing-db.testing-collection.find().limit(2).sort({\"name\":-1})",
 	}
-	case7Glob := make(map[string]interface{})
-	case7.expectedResult = &mongoRequest{
-		Database:"testing-db", Collection:"testing-collection", Action:"find", Args1:case7Glob,
+	caseArgs1 = make(map[string]interface{})
+	singleCase.expectedResult = &mongoRequest{
+		Database:"testing-db", Collection:"testing-collection", Action:"find", Args1:caseArgs1,
 		SubAction1:"limit", SubArgs1:"2", SubAction2:"sort", SubArgs2:"{\"name\":-1}",
 	}
-	case7.ExpectedJson = append(
-		case7.ExpectedJson,
+	singleCase.ExpectedJson = append(
+		singleCase.ExpectedJson,
 		map[string]interface{}{"name":"Pippo-99", "num":float64(99)},
 	)
-	case7.ExpectedJson = append(
-		case7.ExpectedJson,
+	singleCase.ExpectedJson = append(
+		singleCase.ExpectedJson,
 		map[string]interface{}{"name":"Pippo-98", "num":float64(98)},
 	)
-	cases = append(cases, &case7)
-
-	case8 := testCase{}
-	case8.Req = &http.Request{
+	cases = append(cases, singleCase)
+	//================================================
+	singleCase = testCase{}
+	singleCase.Req = &http.Request{
 		Method:     "GET",
 		RequestURI: "/testing-db.testing-collection.insert({\"name\":\"Pippo-XX\",\"num\":42})",
 	}
-	case8Glob := make(map[string]interface{})
-	case8Glob["name"] = "Pippo-XX"
-	case8Glob["num"] = float64(42)
-	case8.expectedResult = &mongoRequest{Database:"testing-db", Collection:"testing-collection", Action:"insert", Args1:case8Glob}
-	case8.ExpectedJson = append(
-		case8.ExpectedJson,
+	caseArgs1 = make(map[string]interface{})
+	caseArgs1["name"] = "Pippo-XX"
+	caseArgs1["num"] = float64(42)
+	singleCase.expectedResult = &mongoRequest{Database:"testing-db", Collection:"testing-collection", Action:"insert", Args1:caseArgs1}
+	singleCase.ExpectedJson = append(
+		singleCase.ExpectedJson,
 		map[string]interface{}{"nInserted":float64(1)},
 	)
-	cases = append(cases, &case8)
-	case9 := testCase{}
-	case9.Req = &http.Request{
+	cases = append(cases, singleCase)
+	//================================================
+	singleCase = testCase{}
+	singleCase.Req = &http.Request{
 		Method:     "DELETE",
 		RequestURI: "/testing-db.testing-collection.remove({\"name\":\"Pippo-42\"})",
 	}
-	case9Glob := make(map[string]interface{})
-	case9Glob["name"] = "Pippo-42"
-	case9.expectedResult = &mongoRequest{
-		Database:"testing-db", Collection:"testing-collection", Action:"remove", Args1:case9Glob,
+	caseArgs1 = make(map[string]interface{})
+	caseArgs1["name"] = "Pippo-42"
+	singleCase.expectedResult = &mongoRequest{
+		Database:"testing-db", Collection:"testing-collection", Action:"remove", Args1:caseArgs1,
 	}
-	case9.ExpectedJson = append(
-		case9.ExpectedJson,
+	singleCase.ExpectedJson = append(
+		singleCase.ExpectedJson,
 		map[string]interface{}{"nRemoved":float64(1)},
 	)
-	cases = append(cases, &case9)
-
-	case10 := testCase{}
-	case10.Req = &http.Request{
+	cases = append(cases, singleCase)
+	//================================================
+	singleCase = testCase{}
+	singleCase.Req = &http.Request{
 		Method:     "DELETE",
 		RequestURI: "/testing-db.testing-collection.update({\"name\":\"mario\",\"num\":42},{\"param\":1},{\"param\":3})",
 	}
-	case10Glob := make(map[string]interface{})
-	case10Glob["name"] = "mario"
-	case10Glob["num"] = float64(42)
-	case10.expectedResult = &mongoRequest{
-		Database:"testing-db", Collection:"testing-collection", Action:"update", Args1:case8Glob,
+	caseArgs1 = make(map[string]interface{})
+	caseArgs1["name"] = "mario"
+	caseArgs1["num"] = float64(42)
+	singleCase.expectedResult = &mongoRequest{
+		Database:"testing-db", Collection:"testing-collection", Action:"update", Args1:caseArgs1,
 	}
-	//cases = append(cases, &case10)
-
+	//cases = append(cases, singleCase)
 	return cases
 }
 
@@ -257,13 +260,6 @@ func compareMapInterfaces(o, p map[string]interface{}) bool {
 			if vv != p[k].(float64) {
 				return false
 			}
-		//FIXME
-		case []interface{}:
-			//fmt.Println(k, "is an array:")
-			for i, u := range vv {
-				fmt.Println(i, u)
-			}
-			return false
 		case map[string]interface{}:
 			//Recursion rocks
 			return compareMapInterfaces(vv, p[k].(map[string]interface{}))

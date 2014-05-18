@@ -22,8 +22,8 @@ type mongoRequest struct {
 	Database   string
 	Collection string
 	//mydb.mycoll.action(args1, args2, args3)
-	//REF convert into slices
 	Action     string
+	//REF convert into one slice
 	Args1       map[string]interface{}
 	Args2       map[string]interface{}
 	Args3       map[string]interface{}
