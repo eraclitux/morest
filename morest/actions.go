@@ -22,11 +22,11 @@ type mongoRequest struct {
 	Database   string
 	Collection string
 	//mydb.mycoll.action(args1, args2, args3)
-	Action     string
+	Action string
 	//REF convert into one slice
-	Args1       map[string]interface{}
-	Args2       map[string]interface{}
-	Args3       map[string]interface{}
+	Args1 map[string]interface{}
+	Args2 map[string]interface{}
+	Args3 map[string]interface{}
 	//REF convert into slices
 	SubAction1 string
 	SubArgs1   string
@@ -97,7 +97,7 @@ func getActionArgs(s string) (action string, args1, args2, args3 map[string]inte
 }
 
 //Help decode mongodb functions and its arguments
-//This is used for sort, limit 
+//This is used for sort, limit
 func getSubActionArgs(s string) (action, args string) {
 	actiond := strings.Split(s, "(")
 	action = actiond[0]
@@ -182,8 +182,8 @@ func bakeAction(queryP **mgo.Query, s *mongoRequest, coll *mgo.Collection) error
 func bakeSubActions(queryP **mgo.Query, s *mongoRequest, coll *mgo.Collection) error {
 	//No subactions on these
 	if s.Action == "count" ||
-	   s.Action == "insert" ||
-	   s.Action == "remove" {
+		s.Action == "insert" ||
+		s.Action == "remove" {
 		return nil
 	}
 	if s.SubAction1 != "" {
@@ -220,6 +220,7 @@ func bakeSubActions(queryP **mgo.Query, s *mongoRequest, coll *mgo.Collection) e
 	}
 	return nil
 }
+
 //Exectute query on mongodb
 func executeQuery(query *mgo.Query, s *mongoRequest, coll *mgo.Collection) ([]byte, error) {
 	gdata := new([]interface{})
@@ -255,9 +256,10 @@ func executeQuery(query *mgo.Query, s *mongoRequest, coll *mgo.Collection) ([]by
 	}
 }
 
-//Performs decoded action on mongodb
+//Performs decoded action on mongodb.
 func (s *mongoRequest) Execute(msession *mgo.Session) ([]byte, error) {
 	//FIXME add session to mongoRequest struct?
+	//TODO test copy/clone/new against consistency modes
 	session := msession.Copy()
 	defer session.Close()
 	coll := session.DB(s.Database).C(s.Collection)

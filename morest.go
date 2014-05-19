@@ -1,5 +1,5 @@
 /*
-MoREST - an ingenuous Mongodb RESTful proxy
+MoREST - Simplistic, universal mongodb driver
 Copyright (c) 2014 Andrea Masi
 */
 package main

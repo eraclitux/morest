@@ -1,4 +1,5 @@
-- [feature] add projection capabilities to find
-- [feature] add ssl option
-- [feature] add consistency option
-- [feature] load actions from external files 
+- add ssl option
+- add consistency option
+- add projection capabilities to find
+- add compression option
+- load actions from external files 

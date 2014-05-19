@@ -1,23 +1,22 @@
 package morest
 
 import (
-	"fmt"
 	"encoding/json"
-	"net/http"
-	"net/http/httptest"
-	"testing"
+	"fmt"
 	"github.com/eraclitux/morest/external/mgo"
 	"log"
+	"net/http"
+	"net/http/httptest"
 	"strings"
+	"testing"
 )
 
-
 type testCase struct {
-	Req            *http.Request
+	Req *http.Request
 	//To test Decode method
 	expectedResult *mongoRequest
 	Err            error
-	//To test MakeMainHandler 
+	//To test MakeMainHandler
 	ExpectedJson []map[string]interface{}
 }
 
@@ -57,19 +56,19 @@ func buildTestCases() []testCase {
 		RequestURI: "/testing-db.testing-collection.find({\"num\":{\"$gt\":4}}).sort().limit(2)",
 	}
 	caseArgs1 = make(map[string]interface{})
-	caseArgs1["num"] = map[string]interface{}{"$gt":float64(4)}
+	caseArgs1["num"] = map[string]interface{}{"$gt": float64(4)}
 	singleCase.expectedResult = &mongoRequest{
-		Database:"testing-db", Collection:"testing-collection", Action:"find", Args1:caseArgs1,
-		SubAction1:"sort", SubArgs1:"", SubAction2:"limit", SubArgs2:"2",
+		Database: "testing-db", Collection: "testing-collection", Action: "find", Args1: caseArgs1,
+		SubAction1: "sort", SubArgs1: "", SubAction2: "limit", SubArgs2: "2",
 	}
 	singleCase.ExpectedJson = append(
 		singleCase.ExpectedJson,
 		//Convert to float64 because so does Unmarshal()
-		map[string]interface{}{"name":"Pippo-5", "num":float64(5)},
+		map[string]interface{}{"name": "Pippo-5", "num": float64(5)},
 	)
 	singleCase.ExpectedJson = append(
 		singleCase.ExpectedJson,
-		map[string]interface{}{"name":"Pippo-6", "num":float64(6)},
+		map[string]interface{}{"name": "Pippo-6", "num": float64(6)},
 	)
 	cases = append(cases, singleCase)
 	//================================================
@@ -88,16 +87,16 @@ func buildTestCases() []testCase {
 	}
 	caseArgs1 = make(map[string]interface{})
 	singleCase.expectedResult = &mongoRequest{
-		Database:"testing-db", Collection:"testing-collection", Action:"find", Args1:caseArgs1,
-		SubAction1:"sort", SubArgs1:"", SubAction2:"limit", SubArgs2:"2",
+		Database: "testing-db", Collection: "testing-collection", Action: "find", Args1: caseArgs1,
+		SubAction1: "sort", SubArgs1: "", SubAction2: "limit", SubArgs2: "2",
 	}
 	singleCase.ExpectedJson = append(
 		singleCase.ExpectedJson,
-		map[string]interface{}{"name":"Pippo-0", "num":float64(0)},
+		map[string]interface{}{"name": "Pippo-0", "num": float64(0)},
 	)
 	singleCase.ExpectedJson = append(
 		singleCase.ExpectedJson,
-		map[string]interface{}{"name":"Pippo-1", "num":float64(1)},
+		map[string]interface{}{"name": "Pippo-1", "num": float64(1)},
 	)
 	cases = append(cases, singleCase)
 	//================================================
@@ -108,16 +107,16 @@ func buildTestCases() []testCase {
 	}
 	caseArgs1 = make(map[string]interface{})
 	singleCase.expectedResult = &mongoRequest{
-		Database:"testing-db", Collection:"testing-collection", Action:"find", Args1:caseArgs1,
-		SubAction1:"limit", SubArgs1:"2", SubAction2:"sort", SubArgs2:"{\"name\":-1}",
+		Database: "testing-db", Collection: "testing-collection", Action: "find", Args1: caseArgs1,
+		SubAction1: "limit", SubArgs1: "2", SubAction2: "sort", SubArgs2: "{\"name\":-1}",
 	}
 	singleCase.ExpectedJson = append(
 		singleCase.ExpectedJson,
-		map[string]interface{}{"name":"Pippo-99", "num":float64(99)},
+		map[string]interface{}{"name": "Pippo-99", "num": float64(99)},
 	)
 	singleCase.ExpectedJson = append(
 		singleCase.ExpectedJson,
-		map[string]interface{}{"name":"Pippo-98", "num":float64(98)},
+		map[string]interface{}{"name": "Pippo-98", "num": float64(98)},
 	)
 	cases = append(cases, singleCase)
 	//================================================
@@ -129,10 +128,10 @@ func buildTestCases() []testCase {
 	caseArgs1 = make(map[string]interface{})
 	caseArgs1["name"] = "Pippo-XX"
 	caseArgs1["num"] = float64(42)
-	singleCase.expectedResult = &mongoRequest{Database:"testing-db", Collection:"testing-collection", Action:"insert", Args1:caseArgs1}
+	singleCase.expectedResult = &mongoRequest{Database: "testing-db", Collection: "testing-collection", Action: "insert", Args1: caseArgs1}
 	singleCase.ExpectedJson = append(
 		singleCase.ExpectedJson,
-		map[string]interface{}{"nInserted":float64(1)},
+		map[string]interface{}{"nInserted": float64(1)},
 	)
 	cases = append(cases, singleCase)
 	//================================================
@@ -144,11 +143,11 @@ func buildTestCases() []testCase {
 	caseArgs1 = make(map[string]interface{})
 	caseArgs1["name"] = "Pippo-42"
 	singleCase.expectedResult = &mongoRequest{
-		Database:"testing-db", Collection:"testing-collection", Action:"remove", Args1:caseArgs1,
+		Database: "testing-db", Collection: "testing-collection", Action: "remove", Args1: caseArgs1,
 	}
 	singleCase.ExpectedJson = append(
 		singleCase.ExpectedJson,
-		map[string]interface{}{"nRemoved":float64(1)},
+		map[string]interface{}{"nRemoved": float64(1)},
 	)
 	cases = append(cases, singleCase)
 	//================================================
@@ -161,7 +160,7 @@ func buildTestCases() []testCase {
 	caseArgs1["name"] = "mario"
 	caseArgs1["num"] = float64(42)
 	singleCase.expectedResult = &mongoRequest{
-		Database:"testing-db", Collection:"testing-collection", Action:"update", Args1:caseArgs1,
+		Database: "testing-db", Collection: "testing-collection", Action: "update", Args1: caseArgs1,
 	}
 	//cases = append(cases, singleCase)
 	return cases
@@ -169,8 +168,9 @@ func buildTestCases() []testCase {
 
 type dummyMongoData struct {
 	Name string
-	Num int
+	Num  int
 }
+
 //Fill test db with dummy data
 func arrangeDB(session *mgo.Session) {
 	session.DB("testing-db").DropDatabase()
@@ -204,7 +204,7 @@ func compareJsonResponses(r string, expectSlice []map[string]interface{}) bool {
 			return false
 		}
 		//We cannot predict _id value so drop it
-		//Sadly mgo Find() doesnt support projection so we need 
+		//Sadly mgo Find() doesnt support projection so we need
 		//to unmarshal responses for a comparison
 		delete(resp, "_id")
 		if !compareMapInterfaces(resp, expectSlice[i]) {
@@ -215,7 +215,7 @@ func compareJsonResponses(r string, expectSlice []map[string]interface{}) bool {
 }
 
 //This test needs mongodb running @ localhost
-func TestMakeMainHandler (t *testing.T) {
+func TestMakeMainHandler(t *testing.T) {
 	defer func() {
 		if r := recover(); r != nil {
 			t.Fail()
@@ -237,7 +237,7 @@ func TestMakeMainHandler (t *testing.T) {
 		recorder := httptest.NewRecorder()
 		handler(recorder, singleCase.Req)
 		if !compareJsonResponses(recorder.Body.String(), singleCase.ExpectedJson) {
-			fmt.Println("In case", i + 1, singleCase.Req.RequestURI)
+			fmt.Println("In case", i+1, singleCase.Req.RequestURI)
 			fmt.Printf("Got: %+v\nExpect: %+v\n", recorder.Body.String(), singleCase.ExpectedJson)
 			t.Fail()
 		}
