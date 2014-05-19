@@ -13,8 +13,9 @@ import (
 	"net/http"
 )
 
-var mongoAddressFlag = flag.String("a", "localhost", "Mongodb address. Can be a list of server in cluster like xxx")
-var portFlag = flag.Int("p", 9002, "Port to listen for requests")
+var mongoAddressFlag = flag.String("mongodb-address", "localhost", "Mongodb address. Can be a list of server in a cluster.")
+var portFlag = flag.Int("port", 9002, "Port to listen for requests.")
+var safeFlag = flag.Bool("safe-mode", true, "When false, MongoDB does not acknowledge the receipt of write operations. Faster but may lead to data loss.")
 
 func main() {
 	defer func() {
@@ -24,6 +25,10 @@ func main() {
 	}()
 	flag.Parse()
 	msession, err := mgo.Dial(*mongoAddressFlag)
+	if !*safeFlag {
+		//msession.SetSafe(&mgo.Safe{WTimeout:100})
+		msession.SetSafe(nil)
+	}
 	if err != nil {
 		//Deferred function are not run becuse os.Exit(1) is called in the end
 		log.Fatalf("Unable to connect to Mongodb: %s", err)

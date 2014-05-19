@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-const DEBUG = true
+const DEBUG = false
 
 //Mongodb supported actions.
 //Declared global to save some memory
