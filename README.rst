@@ -9,7 +9,7 @@ MoREST *mimics* mongodb syntax so you dont have to learn some other rules.
 Plans are not to implemet all mongodb functions but just a subset ot the most useful (es no administrative task will be exposed with this driver).
 
 RESTful-like
-~~~~~~~~~~~~
+------------
 MoREST doesn't really apply the RESTful paradigm, it just follows some of its patterns. 
 
 Supported actions
