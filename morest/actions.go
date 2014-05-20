@@ -64,10 +64,20 @@ func (s *mongoRequest) Check(r *http.Request) error {
 		return fmt.Errorf("%s action is invalid or not supported", s.SubAction2)
 	}
 	switch r.Method {
-	case "POST":
-		if s.Action == "find" {
-			return fmt.Errorf("Action requested not coherent with http method")
+	case "GET":
+		if !(s.Action == "find" || s.Action == "count") {
+			return fmt.Errorf("Action %s not coherent with http method" , s.Action)
 		}
+	case "POST":
+		if s.Action != "insert" {
+			return fmt.Errorf("Action %s not coherent with http method" , s.Action)
+		}
+	case "DELETE":
+		if s.Action != "remove" {
+			return fmt.Errorf("Action %s not coherent with http method" , s.Action)
+		}
+	default:
+		return fmt.Errorf("Action %s not coherent with http method" , s.Action)
 	}
 	return nil
 }
@@ -289,6 +299,7 @@ func MakeMainHandler(msession *mgo.Session) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprintf(w, "%s\n", string(jdata))
 	}
 }

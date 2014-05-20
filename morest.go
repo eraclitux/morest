@@ -30,7 +30,7 @@ func main() {
 		msession.SetSafe(nil)
 	}
 	if err != nil {
-		//Deferred function are not run becuse os.Exit(1) is called in the end
+		//Deferred functions are not run becuse os.Exit(1) is called in the end
 		log.Fatalf("Unable to connect to Mongodb: %s", err)
 	}
 	defer msession.Close()

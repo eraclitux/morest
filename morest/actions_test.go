@@ -16,8 +16,10 @@ type testCase struct {
 	//To test Decode method
 	expectedResult *mongoRequest
 	Err            error
-	//To test MakeMainHandler
+	//To test MakeMainHandler in case of json response 
 	ExpectedJson []map[string]interface{}
+	//To test MakeMainHandler in case of text response 
+	ExpectedText string
 }
 
 var testCases []testCase
@@ -36,8 +38,19 @@ func buildTestCases() []testCase {
 	//================================================
 	singleCase = testCase{}
 	singleCase.Req = &http.Request{
+		Method:     "GET",
+		RequestURI: "/testing-db.testing-collection.count()",
+	}
+	singleCase.expectedResult = &mongoRequest{
+		Database: "testing-db", Collection: "testing-collection", Action: "count",
+	}
+	singleCase.ExpectedText = "100"
+	cases = append(cases, singleCase)
+	//================================================
+	singleCase = testCase{}
+	singleCase.Req = &http.Request{
 		Method:     "POST",
-		RequestURI: "/testing-db.testing-collection.find({\"name\":\"pippo\"}).sort().limit(5)",
+		RequestURI: `/testing-db.testing-collection.find({"name":"pippo"}).sort().limit(5)`,
 	}
 	singleCase.Err = fmt.Errorf("We expect an error")
 	cases = append(cases, singleCase)
@@ -45,7 +58,7 @@ func buildTestCases() []testCase {
 	singleCase = testCase{}
 	singleCase.Req = &http.Request{
 		Method:     "GET",
-		RequestURI: "/testing-db.testing-collection.fund({\"name\":\"pippo\"}).sort().limit(5)",
+		RequestURI: `/testing-db.testing-collection.fund({"name":"pippo"}).sort().limit(5)`,
 	}
 	singleCase.Err = fmt.Errorf("We expect an error")
 	cases = append(cases, singleCase)
@@ -53,7 +66,7 @@ func buildTestCases() []testCase {
 	singleCase = testCase{}
 	singleCase.Req = &http.Request{
 		Method:     "GET",
-		RequestURI: "/testing-db.testing-collection.find({\"num\":{\"$gt\":4}}).sort().limit(2)",
+		RequestURI: `/testing-db.testing-collection.find({"num":{"$gt":4}}).sort().limit(2)`,
 	}
 	caseArgs1 = make(map[string]interface{})
 	caseArgs1["num"] = map[string]interface{}{"$gt": float64(4)}
@@ -103,7 +116,7 @@ func buildTestCases() []testCase {
 	singleCase = testCase{}
 	singleCase.Req = &http.Request{
 		Method:     "GET",
-		RequestURI: "/testing-db.testing-collection.find().limit(2).sort({\"name\":-1})",
+		RequestURI: `/testing-db.testing-collection.find().limit(2).sort({"name":-1})`,
 	}
 	caseArgs1 = make(map[string]interface{})
 	singleCase.expectedResult = &mongoRequest{
@@ -122,8 +135,8 @@ func buildTestCases() []testCase {
 	//================================================
 	singleCase = testCase{}
 	singleCase.Req = &http.Request{
-		Method:     "GET",
-		RequestURI: "/testing-db.testing-collection.insert({\"name\":\"Pippo-XX\",\"num\":42})",
+		Method:     "POST",
+		RequestURI: `/testing-db.testing-collection.insert({"name":"Pippo-XX","num":42})`,
 	}
 	caseArgs1 = make(map[string]interface{})
 	caseArgs1["name"] = "Pippo-XX"
@@ -138,7 +151,7 @@ func buildTestCases() []testCase {
 	singleCase = testCase{}
 	singleCase.Req = &http.Request{
 		Method:     "DELETE",
-		RequestURI: "/testing-db.testing-collection.remove({\"name\":\"Pippo-42\"})",
+		RequestURI: `/testing-db.testing-collection.remove({"name":"Pippo-42"})`,
 	}
 	caseArgs1 = make(map[string]interface{})
 	caseArgs1["name"] = "Pippo-42"
@@ -154,7 +167,7 @@ func buildTestCases() []testCase {
 	singleCase = testCase{}
 	singleCase.Req = &http.Request{
 		Method:     "DELETE",
-		RequestURI: "/testing-db.testing-collection.update({\"name\":\"mario\",\"num\":42},{\"param\":1},{\"param\":3})",
+		RequestURI: `/testing-db.testing-collection.update({"name":"mario","num":42},{"param":1},{"param":3})`,
 	}
 	caseArgs1 = make(map[string]interface{})
 	caseArgs1["name"] = "mario"
