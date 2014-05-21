@@ -1,3 +1,5 @@
+.. contents::
+
 MoREST
 ======
 Sometimes adding mongodb driver code to our application can be overkill. Maybe we are dealing with an embedded device, maybe we are coding an app (html5, native), maybe platform we are using doesn't have yet a mongodb driver, or we are making a simple script, or maybe we are just lazy. In all these cases (and even in others) you can try MoREST, the simplistic, universal mongodb driver.
@@ -52,6 +54,6 @@ Note
 
 Important notices
 =================
-Many RFCs were hurt developing this (poor) code.
+Some RFCs were hurt developing this (poor) code.
 
 This code is not even alfa quality. It is a work in progress and should not be used in production environments.

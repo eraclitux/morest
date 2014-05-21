@@ -66,18 +66,18 @@ func (s *mongoRequest) Check(r *http.Request) error {
 	switch r.Method {
 	case "GET":
 		if !(s.Action == "find" || s.Action == "count") {
-			return fmt.Errorf("Action %s not coherent with http method" , s.Action)
+			return fmt.Errorf("Action %s not coherent with http method", s.Action)
 		}
 	case "POST":
 		if s.Action != "insert" {
-			return fmt.Errorf("Action %s not coherent with http method" , s.Action)
+			return fmt.Errorf("Action %s not coherent with http method", s.Action)
 		}
 	case "DELETE":
 		if s.Action != "remove" {
-			return fmt.Errorf("Action %s not coherent with http method" , s.Action)
+			return fmt.Errorf("Action %s not coherent with http method", s.Action)
 		}
 	default:
-		return fmt.Errorf("Action %s not coherent with http method" , s.Action)
+		return fmt.Errorf("Action %s not coherent with http method", s.Action)
 	}
 	return nil
 }
@@ -188,7 +188,7 @@ func bakeAction(queryP **mgo.Query, s *mongoRequest, coll *mgo.Collection) error
 	}
 }
 
-//Prepares the query to exucute secondary actions
+//Setup the query to exucute secondary actions
 func bakeSubActions(queryP **mgo.Query, s *mongoRequest, coll *mgo.Collection) error {
 	//No subactions on these
 	if s.Action == "count" ||
@@ -232,7 +232,7 @@ func bakeSubActions(queryP **mgo.Query, s *mongoRequest, coll *mgo.Collection) e
 }
 
 //Exectute query on mongodb
-func executeQuery(query *mgo.Query, s *mongoRequest, coll *mgo.Collection) ([]byte, error) {
+func executeQuery(query *mgo.Query, s *mongoRequest, coll *mgo.Collection) (interface{}, error) {
 	gdata := new([]interface{})
 	switch s.Action {
 	case "find":
@@ -246,30 +246,34 @@ func executeQuery(query *mgo.Query, s *mongoRequest, coll *mgo.Collection) ([]by
 		if err != nil {
 			return []byte{}, err
 		}
-		return []byte("{\"nInserted\":1}"), nil
+		return []byte(`{"nInserted":1}`), nil
 	case "remove":
 		//This removes a single document
 		err := coll.Remove(s.Args1)
 		if err != nil {
 			return []byte{}, err
 		}
-		return []byte("{\"nRemoved\":1}"), nil
+		return []byte(`{"nRemoved":1}`), nil
 	case "count":
 		n, err := coll.Count()
 		if err != nil {
 			return []byte{}, err
 		}
 		number := strconv.Itoa(n)
-		return []byte(number), nil
+		return number, nil
 	default:
 		return []byte{}, fmt.Errorf("Unable to execute %s", s.Action)
 	}
 }
 
 //Performs decoded action on mongodb.
-func (s *mongoRequest) Execute(msession *mgo.Session) ([]byte, error) {
+func (s *mongoRequest) Execute(msession *mgo.Session, r *http.Request) (interface{}, error) {
 	//FIXME add session to mongoRequest struct?
 	//TODO test copy/clone/new against consistency modes
+	err := s.Decode(r)
+	if err != nil {
+		return nil, err
+	}
 	session := msession.Copy()
 	defer session.Close()
 	coll := session.DB(s.Database).C(s.Collection)
@@ -289,18 +293,19 @@ func MakeMainHandler(msession *mgo.Session) http.HandlerFunc {
 			log.Printf("[DEBUG] Request struct: %+v\n", r)
 		}
 		mReq := mongoRequest{}
-		err := mReq.Decode(r)
+		iData, err := mReq.Execute(msession, r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		jdata, err := mReq.Execute(msession)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+		switch aData := iData.(type) {
+		case string:
+			w.Header().Set("Content-Type", "text/plain")
+			fmt.Fprintf(w, "%s\n", aData)
+		case []byte:
+			w.Header().Set("Content-Type", "application/json")
+			fmt.Fprintf(w, "%s\n", string(aData))
 		}
-		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, "%s\n", string(jdata))
 	}
 }
 

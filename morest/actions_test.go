@@ -16,9 +16,9 @@ type testCase struct {
 	//To test Decode method
 	expectedResult *mongoRequest
 	Err            error
-	//To test MakeMainHandler in case of json response 
+	//To test MakeMainHandler in case of json response
 	ExpectedJson []map[string]interface{}
-	//To test MakeMainHandler in case of text response 
+	//To test MakeMainHandler in case of text response
 	ExpectedText string
 }
 
@@ -44,7 +44,7 @@ func buildTestCases() []testCase {
 	singleCase.expectedResult = &mongoRequest{
 		Database: "testing-db", Collection: "testing-collection", Action: "count",
 	}
-	singleCase.ExpectedText = "100"
+	singleCase.ExpectedText = "100\n"
 	cases = append(cases, singleCase)
 	//================================================
 	singleCase = testCase{}
@@ -249,9 +249,20 @@ func TestMakeMainHandler(t *testing.T) {
 		}
 		recorder := httptest.NewRecorder()
 		handler(recorder, singleCase.Req)
-		if !compareJsonResponses(recorder.Body.String(), singleCase.ExpectedJson) {
-			fmt.Println("In case", i+1, singleCase.Req.RequestURI)
-			fmt.Printf("Got: %+v\nExpect: %+v\n", recorder.Body.String(), singleCase.ExpectedJson)
+		switch recorder.HeaderMap["Content-Type"][0] {
+		case "application/json":
+			if !compareJsonResponses(recorder.Body.String(), singleCase.ExpectedJson) {
+				fmt.Println("In case", i+1, singleCase.Req.RequestURI)
+				fmt.Printf("Got: %+v\nExpect: %+v\n", recorder.Body.String(), singleCase.ExpectedJson)
+				t.Fail()
+			}
+		case "text/plain":
+			if recorder.Body.String() != singleCase.ExpectedText {
+				fmt.Println("In case", i+1, singleCase.Req.RequestURI)
+				fmt.Printf("Got: %+v\nExpect: %+v\n", recorder.Body.String(), singleCase.ExpectedText)
+				t.Fail()
+			}
+		default:
 			t.Fail()
 		}
 	}
@@ -330,7 +341,7 @@ func compareSortSlices(o, p []string) bool {
 func TestDecodeSortArgs(t *testing.T) {
 	//TODO add $natural case
 	cases := []decodeSortCase{}
-	oneCase := decodeSortCase{"{\"name\":-1,\"age\":1}", []string{"-name", "age"}}
+	oneCase := decodeSortCase{`{"name":-1,"age":1}`, []string{"-name", "age"}}
 	cases = append(cases, oneCase)
 	for _, singleCase := range cases {
 		got := decodeSortArgs(singleCase.Case)
