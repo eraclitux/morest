@@ -25,6 +25,7 @@ Supported actions
 
 Examples of usage
 =================
+Every language that has methods to make http requests can query mongodb, here some examples.
 
 curl
 ----
@@ -47,6 +48,11 @@ Find documents, sort them and limit results::
 Insert a sigle document::
 
         $ curl -g -X POST 'localhost:9002/my-db.my-coll.insert({"name":"pippo"})'
+
+Insert multiple documents::
+
+        $ curl -X POST -d '{"name":"Arthur"},{"name":"Ford"},{"name":"Zaphod"}' 'localhost:9002/my-db.my-coll.insert()'
+
 Note
 ~~~~
 - Do not use any whitespace in query passed with url.

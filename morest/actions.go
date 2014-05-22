@@ -1,6 +1,7 @@
 package morest
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/eraclitux/morest/external/mgo"
@@ -27,6 +28,8 @@ type mongoRequest struct {
 	Args1 map[string]interface{}
 	Args2 map[string]interface{}
 	Args3 map[string]interface{}
+	//Unmarshaled Json data passed as request body
+	JsonPayloadSlice []interface{}
 	//REF convert into slices
 	SubAction1 string
 	SubArgs1   string
@@ -82,7 +85,7 @@ func (s *mongoRequest) Check(r *http.Request) error {
 	return nil
 }
 
-//Help decode mongodb functions and arguments
+//Helps decode mongodb functions and arguments
 //This is used for find, insert, update
 func getActionArgs(s string) (action string, args1, args2, args3 map[string]interface{}, er error) {
 	argsPointerSlice := []*map[string]interface{}{&args1, &args2, &args3}
@@ -106,13 +109,38 @@ func getActionArgs(s string) (action string, args1, args2, args3 map[string]inte
 	return
 }
 
-//Help decode mongodb functions and its arguments
+//Helps decode mongodb functions and its arguments
 //This is used for sort, limit
 func getSubActionArgs(s string) (action, args string) {
 	actiond := strings.Split(s, "(")
 	action = actiond[0]
 	args = strings.Trim(actiond[1], ")")
 	return
+}
+
+//Gets json data passed as body and unmarshal it
+//Works on raw []byte to avoing string conversion overhead
+func unmarshalPayload(r *http.Request) ([]interface{}, error) {
+	if r.ContentLength > 0 {
+		interfaceSlice := []interface{}{}
+		data := make([]byte, r.ContentLength)
+		r.Body.Read(data)
+		//[][]byte
+		splittedByteData := bytes.SplitAfter(data, []byte("},"))
+		for _, single := range splittedByteData {
+			var mData interface{}
+			single = bytes.TrimRight(single, ",")
+			fmt.Println(string(single))
+			err := json.Unmarshal(single, &mData)
+			if err != nil {
+				return nil, err
+			}
+			interfaceSlice = append(interfaceSlice, mData)
+		}
+		fmt.Println("[debug]", interfaceSlice)
+		return interfaceSlice, nil
+	}
+	return nil, nil
 }
 
 func (s *mongoRequest) Decode(r *http.Request) error {
@@ -133,6 +161,10 @@ func (s *mongoRequest) Decode(r *http.Request) error {
 		case 2:
 			var err error
 			s.Action, s.Args1, s.Args2, s.Args3, err = getActionArgs(v)
+			if err != nil {
+				return err
+			}
+			s.JsonPayloadSlice, err = unmarshalPayload(r)
 			if err != nil {
 				return err
 			}
@@ -242,11 +274,21 @@ func executeQuery(query *mgo.Query, s *mongoRequest, coll *mgo.Collection) (inte
 		}
 		return json.Marshal(gdata)
 	case "insert":
-		err := coll.Insert(s.Args1)
-		if err != nil {
-			return []byte{}, err
+		payloadLen := len(s.JsonPayloadSlice)
+		if payloadLen > 0 {
+			err := coll.Insert(s.JsonPayloadSlice...)
+			if err != nil {
+				return []byte{}, err
+			}
+			res := fmt.Sprintf("{\"nInserted\":%d}", payloadLen)
+			return []byte(res), nil
+		} else {
+			err := coll.Insert(s.Args1)
+			if err != nil {
+				return []byte{}, err
+			}
+			return []byte(`{"nInserted":1}`), nil
 		}
-		return []byte(`{"nInserted":1}`), nil
 	case "remove":
 		//This removes a single document
 		err := coll.Remove(s.Args1)
