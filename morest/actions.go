@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/eraclitux/morest/external/mgo"
+	"github.com/eraclitux/MoREST/external/mgo"
 	"log"
 	"net/http"
 	"strconv"
