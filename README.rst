@@ -10,7 +10,7 @@ Every language that has http requests capabilities (GET, POST, PUT, DELETE) can 
 Plans are to not implement all mongodb functions but just a **subset** of the most useful from the end user perspective (es. no administrative task will be exposed with this driver).
 
 RESTful-like
-~~~~~~~~~~~~
+------------
 MoREST doesn't really apply the RESTful paradigm, it just follows some of its patterns. 
 
 Supported actions
@@ -18,6 +18,7 @@ Supported actions
 find
 ----
 Syntax::
+
         db.collection.find(<criteria>)
 
 Projection is not supported.
@@ -25,6 +26,7 @@ Projection is not supported.
 insert
 ------
 Syntax::
+
         db.collection.insert(<single document>)
 
 To insert multiple documents::
