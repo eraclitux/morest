@@ -1,3 +1,4 @@
+
 package morest
 
 import (
@@ -130,14 +131,12 @@ func unmarshalPayload(r *http.Request) ([]interface{}, error) {
 		for _, single := range splittedByteData {
 			var mData interface{}
 			single = bytes.TrimRight(single, ",")
-			fmt.Println(string(single))
 			err := json.Unmarshal(single, &mData)
 			if err != nil {
 				return nil, err
 			}
 			interfaceSlice = append(interfaceSlice, mData)
 		}
-		fmt.Println("[debug]", interfaceSlice)
 		return interfaceSlice, nil
 	}
 	return nil, nil
@@ -290,12 +289,20 @@ func executeQuery(query *mgo.Query, s *mongoRequest, coll *mgo.Collection) (inte
 			return []byte(`{"nInserted":1}`), nil
 		}
 	case "remove":
-		//This removes a single document
-		err := coll.Remove(s.Args1)
+		//TODO add tests
+		if v, ok := s.Args2["justOne"]; ok && v.(float64) == 1 {
+			err := coll.Remove(s.Args1)
+			if err != nil {
+				return []byte{}, err
+			}
+			return []byte(`{"nRemoved":1}`), nil
+		}
+		info, err := coll.RemoveAll(s.Args1)
 		if err != nil {
 			return []byte{}, err
 		}
-		return []byte(`{"nRemoved":1}`), nil
+		returnString := fmt.Sprintf("{\"nRemoved\":%d}", info.Removed)
+		return []byte(returnString), nil
 	case "count":
 		n, err := coll.Count()
 		if err != nil {
