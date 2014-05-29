@@ -3,7 +3,7 @@
 
 MoREST
 ======
-Sometimes adding mongodb driver code to our application can be overkill. Maybe we are dealing with an embedded device, maybe we are coding an app (html5, native), maybe platform we are using doesn't have yet a mongodb driver, or we are making a simple script, or maybe we are just lazy. In all these cases (and even in others) you can try MoREST, the simplistic, universal mongodb driver.
+Sometimes adding mongodb driver code to our application can be overkill. Maybe we are dealing with an embedded device, maybe we are coding an app (html5, native), maybe platform we are using doesn't have yet a mongodb driver, or we are writing a shell script, or maybe we are just lazy. In all these cases (and even in others) you can try MoREST, the simplistic, universal mongodb driver.
 
 Every language that has http requests capabilities (GET, POST, PUT, DELETE) can query mongodb through this driver. MoREST **mimics** mongodb syntax via a `RESTful-like`_ interface so you dont have to learn some other rules. 
 
@@ -62,7 +62,7 @@ Actually only supported on collections::
         db.collection.count()
 
 Note
-~~~~
+----
 - **Do not** use whitespaces in query passed as url.
 
 Examples of usage
@@ -98,7 +98,7 @@ Insert multiple documents::
 
 Note
 ~~~~
-- Do not use any whitespace in query passed with url.
+- **Do not** use any whitespace in query passed as url.
 - You have to escape double quotes.
 
 .. It sits in front your mongodb server (or replica set!) and exposes, , a **subset** of mongodb commands. 
