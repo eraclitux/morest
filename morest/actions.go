@@ -1,4 +1,7 @@
-
+/*
+MoREST - Simplistic, universal mongodb driver
+Copyright (c) 2014 Andrea Masi
+*/
 package morest
 
 import (

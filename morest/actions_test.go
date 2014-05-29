@@ -1,3 +1,7 @@
+/*
+MoREST - Simplistic, universal mongodb driver
+Copyright (c) 2014 Andrea Masi
+*/
 package morest
 
 import (
@@ -28,6 +32,7 @@ func buildTestCases() []testCase {
 	cases := []testCase{}
 	singleCase := testCase{}
 	caseArgs1 := make(map[string]interface{})
+	caseArgs2 := make(map[string]interface{})
 	//================================================
 	singleCase.Req = &http.Request{
 		Method:     "GET",
@@ -167,6 +172,41 @@ func buildTestCases() []testCase {
 	singleCase = testCase{}
 	singleCase.Req = &http.Request{
 		Method:     "DELETE",
+		RequestURI: `/testing-db.testing-collection.remove({"num":{"$lt":5}})`,
+	}
+	caseArgs1 = make(map[string]interface{})
+	caseArgs1["num"] = map[string]interface{}{"$lt":float64(5)}
+	singleCase.expectedResult = &mongoRequest{
+		Database: "testing-db", Collection: "testing-collection", Action: "remove", Args1: caseArgs1,
+	}
+	singleCase.ExpectedJson = append(
+		singleCase.ExpectedJson,
+		map[string]interface{}{"nRemoved": float64(5)},
+	)
+	cases = append(cases, singleCase)
+	//================================================
+	singleCase = testCase{}
+	singleCase.Req = &http.Request{
+		Method:     "DELETE",
+		RequestURI: `/testing-db.testing-collection.remove({"num":{"$lt":15}},{"justOne":1})`,
+	}
+	caseArgs1 = make(map[string]interface{})
+	caseArgs1["num"] = map[string]interface{}{"$lt":float64(15)}
+	caseArgs2["justOne"] = float64(1)
+	singleCase.expectedResult = &mongoRequest{
+		Database: "testing-db", Collection: "testing-collection", Action: "remove",
+		Args1: caseArgs1,
+		Args2: caseArgs2,
+	}
+	singleCase.ExpectedJson = append(
+		singleCase.ExpectedJson,
+		map[string]interface{}{"nRemoved": float64(1)},
+	)
+	cases = append(cases, singleCase)
+	//================================================
+	singleCase = testCase{}
+	singleCase.Req = &http.Request{
+		Method:     "DELETE",
 		RequestURI: `/testing-db.testing-collection.update({"name":"mario","num":42},{"param":1},{"param":3})`,
 	}
 	caseArgs1 = make(map[string]interface{})
@@ -263,10 +303,14 @@ func TestMakeMainHandler(t *testing.T) {
 				t.Fail()
 			}
 		default:
+			fmt.Printf("Unknown content type: %s\n", recorder.HeaderMap["Content-Type"][0])
+			fmt.Println("In case", i+1, singleCase.Req.RequestURI)
+			fmt.Printf("Got: %+v\nExpect: %+v\n", recorder.Body.String(), singleCase.ExpectedText)
 			t.Fail()
 		}
 	}
 }
+
 func compareMapInterfaces(o, p map[string]interface{}) bool {
 	//TODO add more types
 	if len(o) != len(p) {
