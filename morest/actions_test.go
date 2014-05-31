@@ -33,6 +33,7 @@ func buildTestCases() []testCase {
 	singleCase := testCase{}
 	caseArgs1 := make(map[string]interface{})
 	caseArgs2 := make(map[string]interface{})
+	caseArgs3 := make(map[string]interface{})
 	//================================================
 	singleCase.Req = &http.Request{
 		Method:     "GET",
@@ -49,7 +50,7 @@ func buildTestCases() []testCase {
 	singleCase.expectedResult = &mongoRequest{
 		Database: "testing-db", Collection: "testing-collection", Action: "count",
 	}
-	singleCase.ExpectedText = "100\n"
+	singleCase.ExpectedText = "110\n"
 	cases = append(cases, singleCase)
 	//================================================
 	singleCase = testCase{}
@@ -181,7 +182,7 @@ func buildTestCases() []testCase {
 	}
 	singleCase.ExpectedJson = append(
 		singleCase.ExpectedJson,
-		map[string]interface{}{"nRemoved": float64(5)},
+		map[string]interface{}{"nRemoved": float64(10)},
 	)
 	cases = append(cases, singleCase)
 	//================================================
@@ -206,16 +207,24 @@ func buildTestCases() []testCase {
 	//================================================
 	singleCase = testCase{}
 	singleCase.Req = &http.Request{
-		Method:     "DELETE",
-		RequestURI: `/testing-db.testing-collection.update({"name":"mario","num":42},{"param":1},{"param":3})`,
+		Method:     "UPDATE",
+		RequestURI: `/testing-db.testing-collection.update({"name":"Ford"},{"num":42},{"multi":1})`,
 	}
 	caseArgs1 = make(map[string]interface{})
-	caseArgs1["name"] = "mario"
-	caseArgs1["num"] = float64(42)
+	caseArgs1["name"] = "Ford"
+	caseArgs2["num"] = float64(42)
+	caseArgs3["multi"] = float64(1)
 	singleCase.expectedResult = &mongoRequest{
-		Database: "testing-db", Collection: "testing-collection", Action: "update", Args1: caseArgs1,
+		Database: "testing-db", Collection: "testing-collection", Action: "update",
+		Args1: caseArgs1,
+		Args2: caseArgs2,
 	}
-	//cases = append(cases, singleCase)
+	singleCase.ExpectedJson = append(
+		singleCase.ExpectedJson,
+		map[string]interface{}{"nRemoved": float64(1)},
+	)
+	cases = append(cases, singleCase)
+	//================================================
 	return cases
 }
 
@@ -230,6 +239,12 @@ func arrangeDB(session *mgo.Session) {
 	for i := 0; i < 100; i++ {
 		dummy := dummyMongoData{}
 		dummy.Name = fmt.Sprintf("Pippo-%d", i)
+		dummy.Num = i
+		session.DB("testing-db").C("testing-collection").Insert(dummy)
+	}
+	for i := 0; i < 10; i++ {
+		dummy := dummyMongoData{}
+		dummy.Name = "Ford"
 		dummy.Num = i
 		session.DB("testing-db").C("testing-collection").Insert(dummy)
 	}

@@ -43,6 +43,11 @@ Syntax::
 
 Second argument is optional, default is to remove multiple documents.
 
+update
+------
+Syntax::
+        db.collection.update(<query>, <update>, {upsert: <boolean>, multi: <boolean>})
+
 sort
 ----
 Syntax::

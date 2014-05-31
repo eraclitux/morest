@@ -292,7 +292,6 @@ func executeQuery(query *mgo.Query, s *mongoRequest, coll *mgo.Collection) (inte
 			return []byte(`{"nInserted":1}`), nil
 		}
 	case "remove":
-		//TODO add tests
 		if v, ok := s.Args2["justOne"]; ok && v.(float64) == 1 {
 			err := coll.Remove(s.Args1)
 			if err != nil {
