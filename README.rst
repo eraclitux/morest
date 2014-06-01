@@ -82,11 +82,11 @@ Get numbers of all documents in a collection::
 
 Find documents with a given pattern::
 
-        $ curl -g -X GET 'localhost:9002/my-db.my-coll.find({"name":"pippo"}).limit(5)'
+        $ curl -g -X GET 'localhost:9002/my-db.my-coll.find({"name":"Zaphod"}).limit(5)'
 
 Delete a single document::
 
-        $ curl -g -X DELETE 'localhost:9002/my-db.my-coll.remove({"name":"pippo"})'
+        $ curl -g -X DELETE 'localhost:9002/my-db.my-coll.remove({"name":"Zaphod"})'
 
 Find documents, sort them and limit results::
 
@@ -94,17 +94,24 @@ Find documents, sort them and limit results::
 
 Insert a sigle document::
 
-        $ curl -g -X POST 'localhost:9002/my-db.my-coll.insert({"name":"pippo"})'
+        $ curl -g -X POST 'localhost:9002/my-db.my-coll.insert({"name":"Zaphod"})'
 
 Insert multiple documents::
 
         $ curl -X 'localhost:9002/my-db.my-coll.insert()'\
         > POST -d '{"name":"Arthur"},{"name":"Ford"},{"name":"Zaphod"}' 
 
+Update a sigle document::
+
+        $ curl -g -X UPDATE 'localhost:9002/my-db.my-coll.update({"name":"Ford"},{"name":"Arthur"})'
+
+Update multiple documents::
+
+	$ curl -g -X UPDATE 'localhost:9002/my-db.my-coll.update({"name":"Ford"},{"$set":{"num":42}},{"multi":1})`,
 Note
 ~~~~
-- **Do not** use any whitespace in query passed as url.
-- You have to escape double quotes.
+- **Do not** use whitespaces in url or in payloads passed with POST.
+- ``$`` operators must be quoted.
 
 .. It sits in front your mongodb server (or replica set!) and exposes, , a **subset** of mongodb commands. 
 .. Being based on the amazing `mgo <http://labix.org/mgo>`_, you can configure it to act in different consistency modes in case you are using replication. From mgo's documentation:

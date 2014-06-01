@@ -50,7 +50,7 @@ func buildTestCases() []testCase {
 	singleCase.expectedResult = &mongoRequest{
 		Database: "testing-db", Collection: "testing-collection", Action: "count",
 	}
-	singleCase.ExpectedText = "110\n"
+	singleCase.ExpectedText = "100\n"
 	cases = append(cases, singleCase)
 	//================================================
 	singleCase = testCase{}
@@ -182,7 +182,7 @@ func buildTestCases() []testCase {
 	}
 	singleCase.ExpectedJson = append(
 		singleCase.ExpectedJson,
-		map[string]interface{}{"nRemoved": float64(10)},
+		map[string]interface{}{"nRemoved": float64(5)},
 	)
 	cases = append(cases, singleCase)
 	//================================================
@@ -208,12 +208,12 @@ func buildTestCases() []testCase {
 	singleCase = testCase{}
 	singleCase.Req = &http.Request{
 		Method:     "UPDATE",
-		RequestURI: `/testing-db.testing-collection.update({"name":"Ford"},{"num":42},{"multi":1})`,
+		RequestURI: `/testing-db.testing-collection.update({"name":"Pippo-XX"},{"name":"Pippo-42"})`,
 	}
 	caseArgs1 = make(map[string]interface{})
-	caseArgs1["name"] = "Ford"
-	caseArgs2["num"] = float64(42)
-	caseArgs3["multi"] = float64(1)
+	caseArgs2 = make(map[string]interface{})
+	caseArgs1["name"] = "Pippo-XX"
+	caseArgs2["name"] = "Pippo-42"
 	singleCase.expectedResult = &mongoRequest{
 		Database: "testing-db", Collection: "testing-collection", Action: "update",
 		Args1: caseArgs1,
@@ -221,7 +221,53 @@ func buildTestCases() []testCase {
 	}
 	singleCase.ExpectedJson = append(
 		singleCase.ExpectedJson,
-		map[string]interface{}{"nRemoved": float64(1)},
+		map[string]interface{}{"nModified": float64(1)},
+	)
+	cases = append(cases, singleCase)
+	//================================================
+	singleCase = testCase{}
+	singleCase.Req = &http.Request{
+		Method:     "UPDATE",
+		RequestURI: `/testing-db.testing-collection.update({"name":"Pluto"},{"name":"Paperino"},{"upsert":1})`,
+	}
+	caseArgs1 = make(map[string]interface{})
+	caseArgs2 = make(map[string]interface{})
+	caseArgs3 = make(map[string]interface{})
+	caseArgs1["name"] = "Pluto"
+	caseArgs2["name"] = "Paperino"
+	caseArgs3["upsert"] = float64(1)
+	singleCase.expectedResult = &mongoRequest{
+		Database: "testing-db", Collection: "testing-collection", Action: "update",
+		Args1: caseArgs1,
+		Args2: caseArgs2,
+		Args3: caseArgs3,
+	}
+	singleCase.ExpectedJson = append(
+		singleCase.ExpectedJson,
+		map[string]interface{}{"nUpserted": float64(1)},
+	)
+	cases = append(cases, singleCase)
+	//================================================
+	singleCase = testCase{}
+	singleCase.Req = &http.Request{
+		Method:     "UPDATE",
+		RequestURI: `/testing-db.testing-collection2.update({"name":"Ford"},{"$set":{"answer":42}},{"multi":1})`,
+	}
+	caseArgs1 = make(map[string]interface{})
+	caseArgs2 = make(map[string]interface{})
+	caseArgs3 = make(map[string]interface{})
+	caseArgs1["name"] = "Ford"
+	caseArgs2["$set"] = map[string]interface{}{"answer":float64(42)}
+	caseArgs3["multi"] = float64(1)
+	singleCase.expectedResult = &mongoRequest{
+		Database: "testing-db", Collection: "testing-collection2", Action: "update",
+		Args1: caseArgs1,
+		Args2: caseArgs2,
+		Args3: caseArgs3,
+	}
+	singleCase.ExpectedJson = append(
+		singleCase.ExpectedJson,
+		map[string]interface{}{"nModified": float64(10)},
 	)
 	cases = append(cases, singleCase)
 	//================================================
@@ -246,7 +292,7 @@ func arrangeDB(session *mgo.Session) {
 		dummy := dummyMongoData{}
 		dummy.Name = "Ford"
 		dummy.Num = i
-		session.DB("testing-db").C("testing-collection").Insert(dummy)
+		session.DB("testing-db").C("testing-collection2").Insert(dummy)
 	}
 }
 
@@ -371,7 +417,9 @@ func TestDecode(t *testing.T) {
 			testStruct.SubArgs1 == singleCase.expectedResult.SubArgs1 &&
 			testStruct.SubAction2 == singleCase.expectedResult.SubAction2 &&
 			testStruct.SubArgs2 == singleCase.expectedResult.SubArgs2 &&
-			compareMapInterfaces(testStruct.Args1, singleCase.expectedResult.Args1)) {
+			compareMapInterfaces(testStruct.Args1, singleCase.expectedResult.Args1) &&
+			compareMapInterfaces(testStruct.Args2, singleCase.expectedResult.Args2) &&
+			compareMapInterfaces(testStruct.Args3, singleCase.expectedResult.Args3)) {
 			fmt.Println("===============")
 			fmt.Println("Checking case", i+1, singleCase.Req.RequestURI)
 			fmt.Printf("Expected: %+v\n", *singleCase.expectedResult)

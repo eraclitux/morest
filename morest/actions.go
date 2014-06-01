@@ -83,6 +83,10 @@ func (s *mongoRequest) Check(r *http.Request) error {
 		if s.Action != "remove" {
 			return fmt.Errorf("Action %s not coherent with http method", s.Action)
 		}
+	case "UPDATE":
+		if s.Action != "update" {
+			return fmt.Errorf("Action %s not coherent with http method", s.Action)
+		}
 	default:
 		return fmt.Errorf("Action %s not coherent with http method", s.Action)
 	}
@@ -217,6 +221,8 @@ func bakeAction(queryP **mgo.Query, s *mongoRequest, coll *mgo.Collection) error
 		return nil
 	case "insert":
 		return nil
+	case "update":
+		return nil
 	default:
 		return fmt.Errorf("Unable to execute %s", s.Action)
 	}
@@ -225,9 +231,7 @@ func bakeAction(queryP **mgo.Query, s *mongoRequest, coll *mgo.Collection) error
 //Setup the query to exucute secondary actions
 func bakeSubActions(queryP **mgo.Query, s *mongoRequest, coll *mgo.Collection) error {
 	//No subactions on these
-	if s.Action == "count" ||
-		s.Action == "insert" ||
-		s.Action == "remove" {
+	if s.Action != "find" {
 		return nil
 	}
 	if s.SubAction1 != "" {
@@ -305,6 +309,33 @@ func executeQuery(query *mgo.Query, s *mongoRequest, coll *mgo.Collection) (inte
 		}
 		returnString := fmt.Sprintf("{\"nRemoved\":%d}", info.Removed)
 		return []byte(returnString), nil
+	case "update":
+		if v, ok := s.Args3["upsert"]; ok && v.(float64) == 1 {
+			var returnString string
+			info, err := coll.Upsert(s.Args1, s.Args2)
+			if err != nil {
+				return []byte{}, err
+			}
+			if info.Updated != 0  {
+				returnString = `{"nModified":1}`
+			} else {
+				returnString = `{"nUpserted":1}`
+			}
+			return []byte(returnString), nil
+		}
+		if v, ok := s.Args3["multi"]; ok && v.(float64) == 1 {
+			info, err := coll.UpdateAll(s.Args1, s.Args2)
+			if err != nil {
+				return []byte{}, err
+			}
+			returnString := fmt.Sprintf("{\"nModified\":%d}", info.Updated)
+			return []byte(returnString), nil
+		}
+		err := coll.Update(s.Args1, s.Args2)
+		if err != nil {
+			return []byte{}, err
+		}
+		return []byte(`{"nModified":1}`), nil
 	case "count":
 		n, err := coll.Count()
 		if err != nil {
@@ -362,6 +393,6 @@ func MakeMainHandler(msession *mgo.Session) http.HandlerFunc {
 
 func init() {
 	//To check against user requests
-	supportedActions = []string{"find", "insert", "remove", "count"}
+	supportedActions = []string{"find", "insert", "remove", "count", "update"}
 	supportedSubActions = []string{"sort", "limit", ""}
 }
