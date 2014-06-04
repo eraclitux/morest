@@ -207,7 +207,7 @@ func buildTestCases() []testCase {
 	//================================================
 	singleCase = testCase{}
 	singleCase.Req = &http.Request{
-		Method:     "UPDATE",
+		Method:     "PUT",
 		RequestURI: `/testing-db.testing-collection.update({"name":"Pippo-XX"},{"name":"Pippo-42"})`,
 	}
 	caseArgs1 = make(map[string]interface{})
@@ -227,7 +227,7 @@ func buildTestCases() []testCase {
 	//================================================
 	singleCase = testCase{}
 	singleCase.Req = &http.Request{
-		Method:     "UPDATE",
+		Method:     "PUT",
 		RequestURI: `/testing-db.testing-collection.update({"name":"Pluto"},{"name":"Paperino"},{"upsert":1})`,
 	}
 	caseArgs1 = make(map[string]interface{})
@@ -250,7 +250,7 @@ func buildTestCases() []testCase {
 	//================================================
 	singleCase = testCase{}
 	singleCase.Req = &http.Request{
-		Method:     "UPDATE",
+		Method:     "PUT",
 		RequestURI: `/testing-db.testing-collection2.update({"name":"Ford"},{"$set":{"answer":42}},{"multi":1})`,
 	}
 	caseArgs1 = make(map[string]interface{})

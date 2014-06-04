@@ -83,7 +83,7 @@ func (s *mongoRequest) Check(r *http.Request) error {
 		if s.Action != "remove" {
 			return fmt.Errorf("Action %s not coherent with http method", s.Action)
 		}
-	case "UPDATE":
+	case "PUT":
 		if s.Action != "update" {
 			return fmt.Errorf("Action %s not coherent with http method", s.Action)
 		}

@@ -46,6 +46,7 @@ Second argument is optional, default is to remove multiple documents.
 update
 ------
 Syntax::
+
         db.collection.update(<query>, <update>, {upsert: <boolean>, multi: <boolean>})
 
 sort
@@ -103,11 +104,11 @@ Insert multiple documents::
 
 Update a sigle document::
 
-        $ curl -g -X UPDATE 'localhost:9002/my-db.my-coll.update({"name":"Ford"},{"name":"Arthur"})'
+        $ curl -g -X PUT 'localhost:9002/my-db.my-coll.update({"name":"Ford"},{"name":"Arthur"})'
 
 Update multiple documents::
 
-	$ curl -g -X UPDATE 'localhost:9002/my-db.my-coll.update({"name":"Ford"},{"$set":{"num":42}},{"multi":1})`,
+	$ curl -g -X PUT 'localhost:9002/my-db.my-coll.update({"name":"Ford"},{"$set":{"num":42}},{"multi":1})`,
 Note
 ~~~~
 - **Do not** use whitespaces in url or in payloads passed with POST.
