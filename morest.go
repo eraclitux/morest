@@ -14,6 +14,8 @@ import (
 )
 
 var mongoAddressFlag = flag.String("mongodb-address", "localhost", "Mongodb address. Can be a list of server in a cluster.")
+var tlsCertFlag = flag.String("ssl-cert", "", "Path to certificate file")
+var tlsKeyFlag = flag.String("ssl-key", "", "Path to key file")
 var portFlag = flag.Int("port", 9002, "Port to listen for requests.")
 var safeFlag = flag.Bool("safe-mode", true, "When false, MongoDB does not acknowledge the receipt of write operations. Faster but may lead to data loss.")
 
@@ -35,5 +37,11 @@ func main() {
 	}
 	defer msession.Close()
 	http.HandleFunc("/", morest.MakeMainHandler(msession))
-	http.ListenAndServe(fmt.Sprintf(":%d", *portFlag), nil)
+	if *tlsKeyFlag == "" && *tlsCertFlag == "" {
+		http.ListenAndServe(fmt.Sprintf(":%d", *portFlag), nil)
+	} else if *tlsKeyFlag != "" && *tlsCertFlag != "" {
+		http.ListenAndServeTLS(fmt.Sprintf(":%d", *portFlag), *tlsCertFlag, *tlsKeyFlag, nil)
+	} else {
+		log.Fatalf("Invalid ssl options")
+	}
 }

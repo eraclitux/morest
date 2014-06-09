@@ -7,6 +7,8 @@ Sometimes adding mongodb driver code to our application can be overkill. Maybe w
 
 Every language that has http requests capabilities (GET, POST, PUT, DELETE) can query mongodb through this driver. MoREST **mimics** mongodb syntax via a `RESTful-like`_ interface so you dont have to learn some other rules. 
 
+Connections to MoREST can be easily **SSL ecrypted** so it can be used to add encryption to existings mongodb servers compiled without SSL support.
+
 Plans are to not implement all mongodb functions but just a **subset** of the most useful from the end user perspective (es. no administrative task will be exposed with this driver).
 
 RESTful-like
@@ -108,7 +110,7 @@ Update a sigle document::
 
 Update multiple documents::
 
-	$ curl -g -X PUT 'localhost:9002/my-db.my-coll.update({"name":"Ford"},{"$set":{"num":42}},{"multi":1})`,
+	$ curl -g -X PUT 'localhost:9002/my-db.my-coll.update({"name":"Ford"},{"$set":{"num":42}},{"multi":1})',
 Note
 ~~~~
 - **Do not** use whitespaces in url or in payloads passed with POST.
@@ -123,6 +125,16 @@ Note
 .. - **Monotonic** consistency will start reading from a slave if possible, so that the load is better distributed, and once the first write happens the connection is switched to the master. This offers consistent reads and writes, but may not show the most up-to-date data on reads which precede the first write.
 
 .. - **Eventual** consistency offers the best resource usage, distributing reads across multiple slaves and writes across multiple connections to the master, but consistency isn't guaranteed.
+
+Options
+=======
+Options explanation.
+
+SSL
+---
+From command line::
+
+        $ morest --ssl-cert cert.cert --ssl-key cert.key 
 
 Important notices
 =================
