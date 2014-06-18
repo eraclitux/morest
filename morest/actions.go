@@ -15,7 +15,7 @@ import (
 	"strings"
 )
 
-const DEBUG = false
+var DEBUG bool = false
 
 //Mongodb supported actions.
 //Declared global to save some memory

@@ -460,5 +460,8 @@ func TestDecodeSortArgs(t *testing.T) {
 	}
 }
 func init() {
+	//Enables verbose output
+	DEBUG = false
+
 	testCases = buildTestCases()
 }
