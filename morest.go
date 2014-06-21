@@ -1,5 +1,5 @@
 /*
-MoREST - Simplistic, universal mongodb driver
+MoREST - Simplistic, universal mongodb http proxy driver
 Copyright (c) 2014 Andrea Masi
 */
 package main
@@ -27,13 +27,13 @@ func main() {
 	}()
 	flag.Parse()
 	msession, err := mgo.Dial(*mongoAddressFlag)
-	if !*safeFlag {
-		//msession.SetSafe(&mgo.Safe{WTimeout:100})
-		msession.SetSafe(nil)
-	}
 	if err != nil {
-		//Deferred functions are not run becuse os.Exit(1) is called in the end
+		// Deferred functions are not run becuse os.Exit(1) is called in the end
 		log.Fatalf("Unable to connect to Mongodb: %s", err)
+	}
+	if !*safeFlag {
+		// msession.SetSafe(&mgo.Safe{WTimeout:100})
+		msession.SetSafe(nil)
 	}
 	defer msession.Close()
 	http.HandleFunc("/", morest.MakeMainHandler(msession))

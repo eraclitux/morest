@@ -1,7 +1,10 @@
 /*
-MoREST - Simplistic, universal mongodb driver
+MoREST - Simplistic, universal mongodb http proxy driver
 Copyright (c) 2014 Andrea Masi
 */
+
+// This package belongs to MoREST.
+// For code organization only, not indended to be used standalone.
 package morest
 
 import (
@@ -17,31 +20,31 @@ import (
 
 var DEBUG bool = false
 
-//Mongodb supported actions.
-//Declared global to save some memory
-var supportedActions = []string{}
-var supportedSubActions = []string{}
+// Mongodb supported actions.
+// To check against user requests.
+var supportedActions = []string{"find", "insert", "remove", "count", "update"}
+var supportedSubActions = []string{"sort", "limit", ""}
 
-//Model the action requested from client to perform on mongodb
+// Model the action requested from client to perform on mongodb.
 type mongoRequest struct {
 	Database   string
 	Collection string
-	//mydb.mycoll.action(args1, args2, args3)
+	// mydb.mycoll.action(args1, args2, args3)
 	Action string
-	//REF convert into one slice
+	// FIXME convert into one slice?
 	Args1 map[string]interface{}
 	Args2 map[string]interface{}
 	Args3 map[string]interface{}
-	//Unmarshaled Json data passed as request body
+	// Unmarshaled Json data passed as request body
 	JsonPayloadSlice []interface{}
-	//REF convert into slices
+	// FIXME convert into one slice?
 	SubAction1 string
 	SubArgs1   string
 	SubAction2 string
 	SubArgs2   string
 }
 
-//Check if decoded action is sopported and coherent with http method
+// Check if decoded action is sopported and coherent with http method
 func (s *mongoRequest) Check(r *http.Request) error {
 	isSupported := false
 	for _, v := range supportedActions {
@@ -93,8 +96,8 @@ func (s *mongoRequest) Check(r *http.Request) error {
 	return nil
 }
 
-//Helps decode mongodb functions and arguments
-//This is used for find, insert, update
+// getActionArgs helps to decode mongodb functions and arguments.
+// This is used for find, insert, update.
 func getActionArgs(s string) (action string, args1, args2, args3 map[string]interface{}, er error) {
 	argsPointerSlice := []*map[string]interface{}{&args1, &args2, &args3}
 	actiond := strings.Split(s, "(")
@@ -106,8 +109,8 @@ func getActionArgs(s string) (action string, args1, args2, args3 map[string]inte
 	argsSlice := strings.SplitAfter(args, "},")
 	for i, v := range argsSlice {
 		v = strings.TrimRight(v, ",")
-		//Here we dont need to args1.assert(map[string]interface{})
-		//becuse we dont pass interface{} to Unmarshal but the right type
+		// Here we dont need to args1.assert(map[string]interface{})
+		// becuse we dont pass interface{} to Unmarshal but the right type.
 		err := json.Unmarshal([]byte(v), argsPointerSlice[i])
 		if err != nil {
 			er = err
@@ -117,8 +120,8 @@ func getActionArgs(s string) (action string, args1, args2, args3 map[string]inte
 	return
 }
 
-//Helps decode mongodb functions and its arguments
-//This is used for sort, limit
+// getSubActionArgs helps to decode mongodb functions and its arguments.
+// This is used for sort, limit
 func getSubActionArgs(s string) (action, args string) {
 	actiond := strings.Split(s, "(")
 	action = actiond[0]
@@ -126,14 +129,14 @@ func getSubActionArgs(s string) (action, args string) {
 	return
 }
 
-//Gets json data passed as body and unmarshal it
-//Works on raw []byte to avoing string conversion overhead
+// unmarshalPayload gets json data passed as body and unmarshal it.
+// Works on raw []byte to avoing string conversion overhead.
 func unmarshalPayload(r *http.Request) ([]interface{}, error) {
 	if r.ContentLength > 0 {
 		interfaceSlice := []interface{}{}
 		data := make([]byte, r.ContentLength)
 		r.Body.Read(data)
-		//[][]byte
+		// [][]byte
 		splittedByteData := bytes.SplitAfter(data, []byte("},"))
 		for _, single := range splittedByteData {
 			var mData interface{}
@@ -163,7 +166,7 @@ func (s *mongoRequest) Decode(r *http.Request) error {
 			s.Database = v
 		case 1:
 			s.Collection = v
-		//mongodb main function (find, insert etc)
+		// mongodb main function (find, insert etc)
 		case 2:
 			var err error
 			s.Action, s.Args1, s.Args2, s.Args3, err = getActionArgs(v)
@@ -188,9 +191,9 @@ func (s *mongoRequest) Decode(r *http.Request) error {
 	return s.Check(r)
 }
 
-//Decode json sort argumets to be passed to mgo Sort()
+// decodeSortArgs decodes json sort argumets to be passed to mgo Sort().
 func decodeSortArgs(s string) []string {
-	//FIXME parse $natural key
+	// FIXME parse $natural key
 	returnValue := []string{}
 	glob := new(map[string]interface{})
 	if len(s) != 0 {
@@ -211,7 +214,7 @@ func decodeSortArgs(s string) []string {
 	return returnValue
 }
 
-//Setup the query to exucute primary action
+// bakeAction setups the query to exucute primary action
 func bakeAction(queryP **mgo.Query, s *mongoRequest, coll *mgo.Collection) error {
 	switch s.Action {
 	case "find":
@@ -228,9 +231,9 @@ func bakeAction(queryP **mgo.Query, s *mongoRequest, coll *mgo.Collection) error
 	}
 }
 
-//Setup the query to exucute secondary actions
+// bakeSubActions setup the query to exucute secondary actions.
 func bakeSubActions(queryP **mgo.Query, s *mongoRequest, coll *mgo.Collection) error {
-	//No subactions on these
+	// No subactions on this
 	if s.Action != "find" {
 		return nil
 	}
@@ -269,7 +272,7 @@ func bakeSubActions(queryP **mgo.Query, s *mongoRequest, coll *mgo.Collection) e
 	return nil
 }
 
-//Exectute query on mongodb
+// executeQuery exectutes query on mongodb
 func executeQuery(query *mgo.Query, s *mongoRequest, coll *mgo.Collection) (interface{}, error) {
 	gdata := new([]interface{})
 	switch s.Action {
@@ -316,7 +319,7 @@ func executeQuery(query *mgo.Query, s *mongoRequest, coll *mgo.Collection) (inte
 			if err != nil {
 				return []byte{}, err
 			}
-			if info.Updated != 0  {
+			if info.Updated != 0 {
 				returnString = `{"nModified":1}`
 			} else {
 				returnString = `{"nUpserted":1}`
@@ -348,10 +351,10 @@ func executeQuery(query *mgo.Query, s *mongoRequest, coll *mgo.Collection) (inte
 	}
 }
 
-//Performs decoded action on mongodb.
+// Performs decoded action on mongodb.
 func (s *mongoRequest) Execute(msession *mgo.Session, r *http.Request) (interface{}, error) {
-	//FIXME add session to mongoRequest struct?
-	//TODO test copy/clone/new against consistency modes
+	// FIXME add session to mongoRequest struct?
+	// TODO test copy/clone/new against consistency modes
 	err := s.Decode(r)
 	if err != nil {
 		return nil, err
@@ -389,10 +392,4 @@ func MakeMainHandler(msession *mgo.Session) http.HandlerFunc {
 			fmt.Fprintf(w, "%s\n", string(aData))
 		}
 	}
-}
-
-func init() {
-	//To check against user requests
-	supportedActions = []string{"find", "insert", "remove", "count", "update"}
-	supportedSubActions = []string{"sort", "limit", ""}
 }

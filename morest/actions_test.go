@@ -1,7 +1,3 @@
-/*
-MoREST - Simplistic, universal mongodb driver
-Copyright (c) 2014 Andrea Masi
-*/
 package morest
 
 import (
@@ -17,12 +13,12 @@ import (
 
 type testCase struct {
 	Req *http.Request
-	//To test Decode method
+	// To test Decode method
 	expectedResult *mongoRequest
 	Err            error
-	//To test MakeMainHandler in case of json response
+	// To test MakeMainHandler in case of json response
 	ExpectedJson []map[string]interface{}
-	//To test MakeMainHandler in case of text response
+	// To test MakeMainHandler in case of text response
 	ExpectedText string
 }
 
@@ -176,7 +172,7 @@ func buildTestCases() []testCase {
 		RequestURI: `/testing-db.testing-collection.remove({"num":{"$lt":5}})`,
 	}
 	caseArgs1 = make(map[string]interface{})
-	caseArgs1["num"] = map[string]interface{}{"$lt":float64(5)}
+	caseArgs1["num"] = map[string]interface{}{"$lt": float64(5)}
 	singleCase.expectedResult = &mongoRequest{
 		Database: "testing-db", Collection: "testing-collection", Action: "remove", Args1: caseArgs1,
 	}
@@ -192,7 +188,7 @@ func buildTestCases() []testCase {
 		RequestURI: `/testing-db.testing-collection.remove({"num":{"$lt":15}},{"justOne":1})`,
 	}
 	caseArgs1 = make(map[string]interface{})
-	caseArgs1["num"] = map[string]interface{}{"$lt":float64(15)}
+	caseArgs1["num"] = map[string]interface{}{"$lt": float64(15)}
 	caseArgs2["justOne"] = float64(1)
 	singleCase.expectedResult = &mongoRequest{
 		Database: "testing-db", Collection: "testing-collection", Action: "remove",
@@ -257,7 +253,7 @@ func buildTestCases() []testCase {
 	caseArgs2 = make(map[string]interface{})
 	caseArgs3 = make(map[string]interface{})
 	caseArgs1["name"] = "Ford"
-	caseArgs2["$set"] = map[string]interface{}{"answer":float64(42)}
+	caseArgs2["$set"] = map[string]interface{}{"answer": float64(42)}
 	caseArgs3["multi"] = float64(1)
 	singleCase.expectedResult = &mongoRequest{
 		Database: "testing-db", Collection: "testing-collection2", Action: "update",
@@ -279,7 +275,7 @@ type dummyMongoData struct {
 	Num  int
 }
 
-//Fill test db with dummy data
+// arrangeDB fills test db with dummy data
 func arrangeDB(session *mgo.Session) {
 	session.DB("testing-db").DropDatabase()
 	for i := 0; i < 100; i++ {
@@ -317,9 +313,9 @@ func compareJsonResponses(r string, expectSlice []map[string]interface{}) bool {
 			fmt.Println("[ERROR] Unmarshalling", err, v)
 			return false
 		}
-		//We cannot predict _id value so drop it
-		//Sadly mgo Find() doesnt support projection so we need
-		//to unmarshal responses for a comparison
+		// We cannot predict _id value so drop it
+		// Sadly mgo Find() doesnt support projection so we need
+		// to unmarshal responses for a comparison
 		delete(resp, "_id")
 		if !compareMapInterfaces(resp, expectSlice[i]) {
 			return false
@@ -328,7 +324,7 @@ func compareJsonResponses(r string, expectSlice []map[string]interface{}) bool {
 	return true
 }
 
-//This test needs mongodb running @ localhost
+// This test needs mongodb running @ localhost
 func TestMakeMainHandler(t *testing.T) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -373,24 +369,25 @@ func TestMakeMainHandler(t *testing.T) {
 }
 
 func compareMapInterfaces(o, p map[string]interface{}) bool {
-	//TODO add more types
+	// TODO add more types
+	// TODO replace with reflect package
 	if len(o) != len(p) {
 		return false
 	}
 	for k, v := range o {
 		switch vv := v.(type) {
 		case string:
-			//fmt.Println(k, "is string", vv)
+			// fmt.Println(k, "is string", vv)
 			if vv != p[k].(string) {
 				return false
 			}
 		case float64:
-			//fmt.Println(k, "is float64", vv)
+			// fmt.Println(k, "is float64", vv)
 			if vv != p[k].(float64) {
 				return false
 			}
 		case map[string]interface{}:
-			//Recursion rocks
+			// Recursion rocks
 			return compareMapInterfaces(vv, p[k].(map[string]interface{}))
 		default:
 			fmt.Printf("%v is of a type I don't know how to handle %T(%v)\n", k, v, v)
@@ -446,7 +443,7 @@ func compareSortSlices(o, p []string) bool {
 	return true
 }
 func TestDecodeSortArgs(t *testing.T) {
-	//TODO add $natural case
+	// TODO add $natural case
 	cases := []decodeSortCase{}
 	oneCase := decodeSortCase{`{"name":-1,"age":1}`, []string{"-name", "age"}}
 	cases = append(cases, oneCase)
@@ -460,7 +457,7 @@ func TestDecodeSortArgs(t *testing.T) {
 	}
 }
 func init() {
-	//Enables verbose output
+	// Enables verbose output
 	DEBUG = false
 
 	testCases = buildTestCases()
