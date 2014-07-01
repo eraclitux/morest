@@ -374,6 +374,7 @@ func (s *mongoRequest) Execute(msession *mgo.Session, r *http.Request) (interfac
 
 func MakeMainHandler(msession *mgo.Session) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// TODO add a recover
 		if DEBUG {
 			log.Printf("[DEBUG] Request struct: %+v\n", r)
 		}
