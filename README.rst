@@ -2,10 +2,12 @@
 MoREST
 =========
 
-.. image:: https://drone.io/github.com/eraclitux/morest/status.png
+|image0|_
+
+.. |image0| image:: https://drone.io/github.com/eraclitux/morest/status.png
+.. _image0: https://drone.io/github.com/eraclitux/morest/latest
 
 .. contents::
-
 
 Intro
 =====
