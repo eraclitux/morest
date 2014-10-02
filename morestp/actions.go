@@ -11,7 +11,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/eraclitux/morest/external/mgo"
+	"gopkg.in/mgo.v2"
 	"log"
 	"net/http"
 	"strconv"

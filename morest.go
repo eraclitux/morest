@@ -7,8 +7,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/eraclitux/morest/external/mgo"
 	"github.com/eraclitux/morest/morestp"
+	"gopkg.in/mgo.v2"
 	"log"
 	"net/http"
 )
