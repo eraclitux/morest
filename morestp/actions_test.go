@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -73,8 +74,14 @@ func buildTestCases() []testCase {
 	caseArgs1 = make(map[string]interface{})
 	caseArgs1["num"] = map[string]interface{}{"$gt": float64(4)}
 	singleCase.expectedResult = &mongoRequest{
-		Database: "testing-db", Collection: "testing-collection", Action: "find", Args1: caseArgs1,
-		SubAction1: "sort", SubArgs1: "", SubAction2: "limit", SubArgs2: "2",
+		Database:   "testing-db",
+		Collection: "testing-collection",
+		Action:     "find",
+		Args1:      caseArgs1,
+		SubAction1: "sort",
+		SubArgs1:   "",
+		SubAction2: "limit",
+		SubArgs2:   "2",
 	}
 	singleCase.ExpectedJson = append(
 		singleCase.ExpectedJson,
@@ -100,10 +107,16 @@ func buildTestCases() []testCase {
 		Method:     "GET",
 		RequestURI: "/testing-db.testing-collection.find().sort().limit(2)",
 	}
-	caseArgs1 = make(map[string]interface{})
+	caseArgs1 = nil
 	singleCase.expectedResult = &mongoRequest{
-		Database: "testing-db", Collection: "testing-collection", Action: "find", Args1: caseArgs1,
-		SubAction1: "sort", SubArgs1: "", SubAction2: "limit", SubArgs2: "2",
+		Database:   "testing-db",
+		Collection: "testing-collection",
+		Action:     "find",
+		Args1:      caseArgs1,
+		SubAction1: "sort",
+		SubArgs1:   "",
+		SubAction2: "limit",
+		SubArgs2:   "2",
 	}
 	singleCase.ExpectedJson = append(
 		singleCase.ExpectedJson,
@@ -120,10 +133,16 @@ func buildTestCases() []testCase {
 		Method:     "GET",
 		RequestURI: `/testing-db.testing-collection.find().limit(2).sort({"name":-1})`,
 	}
-	caseArgs1 = make(map[string]interface{})
+	caseArgs1 = nil
 	singleCase.expectedResult = &mongoRequest{
-		Database: "testing-db", Collection: "testing-collection", Action: "find", Args1: caseArgs1,
-		SubAction1: "limit", SubArgs1: "2", SubAction2: "sort", SubArgs2: "{\"name\":-1}",
+		Database:   "testing-db",
+		Collection: "testing-collection",
+		Action:     "find",
+		Args1:      caseArgs1,
+		SubAction1: "limit",
+		SubArgs1:   "2",
+		SubAction2: "sort",
+		SubArgs2:   `{"name":-1}`,
 	}
 	singleCase.ExpectedJson = append(
 		singleCase.ExpectedJson,
@@ -191,9 +210,11 @@ func buildTestCases() []testCase {
 	caseArgs1["num"] = map[string]interface{}{"$lt": float64(15)}
 	caseArgs2["justOne"] = float64(1)
 	singleCase.expectedResult = &mongoRequest{
-		Database: "testing-db", Collection: "testing-collection", Action: "remove",
-		Args1: caseArgs1,
-		Args2: caseArgs2,
+		Database:   "testing-db",
+		Collection: "testing-collection",
+		Action:     "remove",
+		Args1:      caseArgs1,
+		Args2:      caseArgs2,
 	}
 	singleCase.ExpectedJson = append(
 		singleCase.ExpectedJson,
@@ -211,9 +232,11 @@ func buildTestCases() []testCase {
 	caseArgs1["name"] = "Pippo-XX"
 	caseArgs2["name"] = "Pippo-42"
 	singleCase.expectedResult = &mongoRequest{
-		Database: "testing-db", Collection: "testing-collection", Action: "update",
-		Args1: caseArgs1,
-		Args2: caseArgs2,
+		Database:   "testing-db",
+		Collection: "testing-collection",
+		Action:     "update",
+		Args1:      caseArgs1,
+		Args2:      caseArgs2,
 	}
 	singleCase.ExpectedJson = append(
 		singleCase.ExpectedJson,
@@ -233,10 +256,12 @@ func buildTestCases() []testCase {
 	caseArgs2["name"] = "Paperino"
 	caseArgs3["upsert"] = float64(1)
 	singleCase.expectedResult = &mongoRequest{
-		Database: "testing-db", Collection: "testing-collection", Action: "update",
-		Args1: caseArgs1,
-		Args2: caseArgs2,
-		Args3: caseArgs3,
+		Database:   "testing-db",
+		Collection: "testing-collection",
+		Action:     "update",
+		Args1:      caseArgs1,
+		Args2:      caseArgs2,
+		Args3:      caseArgs3,
 	}
 	singleCase.ExpectedJson = append(
 		singleCase.ExpectedJson,
@@ -256,10 +281,12 @@ func buildTestCases() []testCase {
 	caseArgs2["$set"] = map[string]interface{}{"answer": float64(42)}
 	caseArgs3["multi"] = float64(1)
 	singleCase.expectedResult = &mongoRequest{
-		Database: "testing-db", Collection: "testing-collection2", Action: "update",
-		Args1: caseArgs1,
-		Args2: caseArgs2,
-		Args3: caseArgs3,
+		Database:   "testing-db",
+		Collection: "testing-collection2",
+		Action:     "update",
+		Args1:      caseArgs1,
+		Args2:      caseArgs2,
+		Args3:      caseArgs3,
 	}
 	singleCase.ExpectedJson = append(
 		singleCase.ExpectedJson,
@@ -317,7 +344,7 @@ func compareJsonResponses(r string, expectSlice []map[string]interface{}) bool {
 		// Sadly mgo Find() doesnt support projection so we need
 		// to unmarshal responses for a comparison
 		delete(resp, "_id")
-		if !compareMapInterfaces(resp, expectSlice[i]) {
+		if !reflect.DeepEqual(resp, expectSlice[i]) {
 			return false
 		}
 	}
@@ -369,8 +396,7 @@ func TestMakeMainHandler(t *testing.T) {
 }
 
 func compareMapInterfaces(o, p map[string]interface{}) bool {
-	// TODO add more types
-	// TODO replace with reflect package
+	// NOTE for reference only. Using reflect.DeepEqual
 	if len(o) != len(p) {
 		return false
 	}
@@ -396,6 +422,7 @@ func compareMapInterfaces(o, p map[string]interface{}) bool {
 	}
 	return true
 }
+
 func TestDecode(t *testing.T) {
 	for i, singleCase := range testCases {
 		testStruct := mongoRequest{}
@@ -414,13 +441,15 @@ func TestDecode(t *testing.T) {
 			testStruct.SubArgs1 == singleCase.expectedResult.SubArgs1 &&
 			testStruct.SubAction2 == singleCase.expectedResult.SubAction2 &&
 			testStruct.SubArgs2 == singleCase.expectedResult.SubArgs2 &&
-			compareMapInterfaces(testStruct.Args1, singleCase.expectedResult.Args1) &&
-			compareMapInterfaces(testStruct.Args2, singleCase.expectedResult.Args2) &&
-			compareMapInterfaces(testStruct.Args3, singleCase.expectedResult.Args3)) {
-			fmt.Println("===============")
-			fmt.Println("Checking case", i+1, singleCase.Req.RequestURI)
-			fmt.Printf("Expected: %+v\n", *singleCase.expectedResult)
-			fmt.Printf("Got: %+v\n", testStruct)
+			reflect.DeepEqual(testStruct.Args1, singleCase.expectedResult.Args1) &&
+			reflect.DeepEqual(testStruct.Args2, singleCase.expectedResult.Args2) &&
+			reflect.DeepEqual(testStruct.Args3, singleCase.expectedResult.Args3)) {
+			if testing.Verbose() {
+				fmt.Println("===============")
+				fmt.Println("Checking case", i+1, singleCase.Req.RequestURI)
+				fmt.Printf("Expected: %+v\n", *singleCase.expectedResult)
+				fmt.Printf("Got: %+v\n", testStruct)
+			}
 			t.Fail()
 		}
 	}
@@ -457,8 +486,5 @@ func TestDecodeSortArgs(t *testing.T) {
 	}
 }
 func init() {
-	// Enables verbose output
-	DEBUG = false
-
 	testCases = buildTestCases()
 }
