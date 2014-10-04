@@ -1,3 +1,5 @@
+// +build integration
+
 package main
 
 import (
@@ -455,36 +457,6 @@ func TestDecode(t *testing.T) {
 	}
 }
 
-type decodeSortCase struct {
-	Case     string
-	Expected []string
-}
-
-func compareSortSlices(o, p []string) bool {
-	if len(o) != len(p) {
-		return false
-	}
-	for i, v := range o {
-		if v != p[i] {
-			return false
-		}
-	}
-	return true
-}
-func TestDecodeSortArgs(t *testing.T) {
-	// TODO add $natural case
-	cases := []decodeSortCase{}
-	oneCase := decodeSortCase{`{"name":-1,"age":1}`, []string{"-name", "age"}}
-	cases = append(cases, oneCase)
-	for _, singleCase := range cases {
-		got := decodeSortArgs(singleCase.Case)
-		if !compareSortSlices(got, singleCase.Expected) {
-			fmt.Printf("expected: %+v\n", singleCase)
-			fmt.Printf("got: %+v\n", got)
-			t.Fail()
-		}
-	}
-}
 func init() {
 	testCases = buildTestCases()
 }
