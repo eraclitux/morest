@@ -7,7 +7,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/eraclitux/morest/morestp"
 	"gopkg.in/mgo.v2"
 	"log"
 	"net/http"
@@ -36,7 +35,7 @@ func main() {
 		msession.SetSafe(nil)
 	}
 	defer msession.Close()
-	http.HandleFunc("/", morest.MakeMainHandler(msession))
+	http.HandleFunc("/", MakeMainHandler(msession))
 	if *tlsKeyFlag == "" && *tlsCertFlag == "" {
 		http.ListenAndServe(fmt.Sprintf(":%d", *portFlag), nil)
 	} else if *tlsKeyFlag != "" && *tlsCertFlag != "" {

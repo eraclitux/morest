@@ -1,4 +1,4 @@
-package morest
+package main
 
 import (
 	"encoding/json"

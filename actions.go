@@ -1,11 +1,4 @@
-/*
-MoREST - Simplistic, universal mongodb http proxy driver
-Copyright (c) 2014 Andrea Masi
-*/
-
-// This package belongs to MoREST.
-// For code organization only, not indended to be used standalone.
-package morest
+package main
 
 import (
 	"bytes"
